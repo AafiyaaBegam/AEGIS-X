@@ -1,0 +1,47 @@
+﻿# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and backups
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# Editor and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local backup files
+*.backup
+
+# Development backups and archived source
+.stage4-backup/
+.stage5-backup/
+.stage5-policy-fix-backup/
+.stage6-backup/
+AEGIS-X-Stage5-Source/
+AEGIS-X-Stage5-Source.zip
+
+# Temporary source backups
+*.bak
+*-backup
+*.audit-backup
