@@ -96,9 +96,54 @@ def test_submitted_delete_event_is_explained_and_not_executed(isolated_security_
     assert body["decision"] == "BLOCK"
     assert body["severity"] == "CRITICAL"
     assert body["execution_performed"] is False
+    assert body["actor"] == "security-admin"
+    assert body["actor_identity_verified"] is True
+    assert body["source_is_client_claimed"] is True
     events = client.get("/security/events", headers=headers).json()
     assert events["count"] == 1
+    assert events["events"][0]["actor"] == "security-admin"
     assert "production" in events["events"][0]["resource"]
+
+
+def test_client_cannot_forge_security_event_actor(isolated_security_db):
+    client = isolated_security_db
+    client.post("/security/bootstrap", json={
+        "bootstrap_token": "test-bootstrap-token-that-is-long-enough",
+        "username": "security-admin",
+        "password": "a-strong-test-password-123",
+    })
+    token = client.post("/security/login", json={
+        "username": "security-admin", "password": "a-strong-test-password-123"
+    }).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.post("/security/events/ingest", headers=headers, json={
+        "actor": "forged-super-admin",
+        "action": "Read application status",
+        "resource": "demo/status",
+        "source": "claimed-external-agent",
+    })
+    assert response.status_code == 201
+    assert response.json()["actor"] == "security-admin"
+    event = client.get("/security/events", headers=headers).json()["events"][0]
+    assert event["actor"] == "security-admin"
+    assert event["source"] == "claimed-external-agent"
+
+
+def test_security_event_rejects_whitespace_only_fields(isolated_security_db):
+    client = isolated_security_db
+    client.post("/security/bootstrap", json={
+        "bootstrap_token": "test-bootstrap-token-that-is-long-enough",
+        "username": "security-admin",
+        "password": "a-strong-test-password-123",
+    })
+    token = client.post("/security/login", json={
+        "username": "security-admin", "password": "a-strong-test-password-123"
+    }).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.post("/security/events/ingest", headers=headers, json={
+        "action": "   ", "resource": "demo/status"
+    })
+    assert response.status_code == 422
 
 
 def test_core_api_can_be_enforced_by_role(isolated_security_db, monkeypatch):
