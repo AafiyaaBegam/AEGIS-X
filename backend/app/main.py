@@ -32,6 +32,14 @@ class ActionRequest(BaseModel):
     policy_violation: bool
     contradiction_detected: bool
 
+    @field_validator("action")
+    @classmethod
+    def normalize_action(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Action must not be blank.")
+        return value
+
 
 class SimulationRequest(BaseModel):
     actions: list[str] = Field(min_length=1, max_length=10)
