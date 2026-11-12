@@ -99,6 +99,9 @@ def analyze_policy(action: str, evidence_score: float = 100,
                  and bool(_PATTERNS["financial_operation"].search(action)))
     privilege_change = (bool(_PATTERNS["privilege_asset"].search(action))
                         and bool(_PATTERNS["privilege_change"].search(action)))
+    bulk_communication = bool(
+        _PATTERNS["bulk_external_communication"].search(action)
+    )
     irreversible = bool(_PATTERNS["irreversible"].search(action))
     critical_asset = bool(_PATTERNS["critical_asset"].search(action))
 
@@ -117,6 +120,9 @@ def analyze_policy(action: str, evidence_score: float = 100,
     if privilege_change:
         add("PRIVILEGE_OR_SECURITY_CHANGE", 30,
             "A permission, credential, role, or security control is being changed.")
+    if bulk_communication:
+        add("BULK_EXTERNAL_COMMUNICATION", 30,
+            "A message is being sent to a broad customer or user distribution.")
 
     score = min(100.0, float(sum(item["points"] for item in factors)))
     level = "CRITICAL" if score >= 80 else "HIGH" if score >= 60 else (
@@ -133,6 +139,7 @@ def analyze_policy(action: str, evidence_score: float = 100,
             "production_change": production_change,
             "financial_operation": financial,
             "privilege_change": privilege_change,
+            "bulk_external_communication": bulk_communication,
             "critical_asset_mentioned": critical_asset,
             "potentially_irreversible": irreversible,
             "destructive_critical_data_operation": destructive and critical_target,
