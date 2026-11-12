@@ -18,7 +18,7 @@
 
 ## Important limitations
 
-- The login throttle is process-local. It is not a distributed rate limiter and is not sufficient by itself for a multi-worker or public internet deployment.
+- Login failures are counted in SQLite and persist across API process restarts on one shared database. For multi-host deployments, use a shared distributed rate limiter and ensure all instances share the same protected database or rate-limit service.
 - The decision audit hash chain is tamper-evident against ordinary record edits, but it is not independently anchored. A party able to rewrite the database and recompute every hash could potentially rewrite the chain. Do not describe it as tamper-proof.
 - SQLite triggers protect against ordinary row updates/deletes, not an administrator who can replace the database or alter its schema.
 - Policy decisions are deterministic text-and-input-signal assessments. They do not inspect live infrastructure, prove the truth of supplied evidence, or execute/stop external actions.
