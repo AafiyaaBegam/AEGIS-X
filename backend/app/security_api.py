@@ -11,11 +11,10 @@ from backend.app.engines.policy_engine import analyze_policy
 from backend.app.security_store import (
     SecurityError, add_security_event, authenticate, bootstrap_admin,
     create_user, list_security_events, list_users, login, revoke_session,
-    user_count,
+    user_count, login_failure_count, record_login_failure, clear_login_failures,
 )
 
 router = APIRouter(prefix="/security", tags=["Security & access"])
-_LOGIN_FAILURES: dict[str, list[float]] = {}
 
 
 class BootstrapRequest(BaseModel):
@@ -109,20 +108,18 @@ def bootstrap(request: BootstrapRequest):
 
 @router.post("/login")
 def create_session(payload: LoginRequest, request: Request):
-    # Per-process local throttle. A shared/distributed limiter is required for
-    # multi-worker or public deployments.
-    key = f"{request.client.host if request.client else 'unknown'}:{payload.username.lower()}"
-    now = __import__("time").time()
-    recent = [stamp for stamp in _LOGIN_FAILURES.get(key, []) if now - stamp < 300]
-    _LOGIN_FAILURES[key] = recent
-    if len(recent) >= 5:
+    # SQLite-backed throttling persists across API process restarts. A shared
+    # distributed limiter is still recommended for multi-host deployments.
+    client_host = request.client.host if request.client else "unknown"
+    key = f"{client_host}:{payload.username.strip().casefold()}"
+    if login_failure_count(key) >= 5:
         raise HTTPException(status_code=429, detail="Too many sign-in attempts. Try again in five minutes.")
     try:
         result = login(payload.username, payload.password)
-        _LOGIN_FAILURES.pop(key, None)
+        clear_login_failures(key)
         return result
     except SecurityError as exc:
-        _LOGIN_FAILURES[key] = recent + [now]
+        record_login_failure(key)
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
