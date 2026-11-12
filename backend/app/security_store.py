@@ -84,6 +84,12 @@ def initialize():
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            bucket_hash TEXT NOT NULL,
+            failed_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_login_attempts_bucket_time
+            ON login_attempts(bucket_hash, failed_at);
         CREATE TABLE IF NOT EXISTS security_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             created_at TEXT NOT NULL,
@@ -266,3 +272,41 @@ def user_count() -> int:
     initialize()
     with _connect() as conn:
         return int(conn.execute("SELECT COUNT(*) FROM users").fetchone()[0])
+
+
+def _login_bucket_hash(bucket_key: str) -> str:
+    return hashlib.sha256(bucket_key.encode("utf-8")).hexdigest()
+
+
+def login_failure_count(bucket_key: str, window_seconds: int = 300) -> int:
+    """Count recent failed logins in SQLite so limits survive API restarts."""
+    initialize()
+    cutoff = _now() - window_seconds
+    digest = _login_bucket_hash(bucket_key)
+    with _connect() as conn:
+        conn.execute("DELETE FROM login_attempts WHERE failed_at < ?", (cutoff,))
+        row = conn.execute(
+            "SELECT COUNT(*) FROM login_attempts WHERE bucket_hash=? AND failed_at>=?",
+            (digest, cutoff),
+        ).fetchone()
+        return int(row[0])
+
+
+def record_login_failure(bucket_key: str) -> None:
+    initialize()
+    digest = _login_bucket_hash(bucket_key)
+    with _connect() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        now = _now()
+        conn.execute("DELETE FROM login_attempts WHERE failed_at < ?", (now - 300,))
+        conn.execute(
+            "INSERT INTO login_attempts(bucket_hash, failed_at) VALUES(?, ?)",
+            (digest, now),
+        )
+
+
+def clear_login_failures(bucket_key: str) -> None:
+    initialize()
+    digest = _login_bucket_hash(bucket_key)
+    with _connect() as conn:
+        conn.execute("DELETE FROM login_attempts WHERE bucket_hash=?", (digest,))
