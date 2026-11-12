@@ -41,6 +41,12 @@ _PATTERNS = {
     "privilege_change": re.compile(
         r"\b(grant|revoke|elevate|disable|enable|rotate|reset|modify|change|remove)\b", re.I
     ),
+    "bulk_external_communication": re.compile(
+        r"\b(send|email|message|notify|broadcast)\b.{0,100}\b("
+        r"mailing list|all customers|all users|customer list|distribution list)\b"
+        r"|\b(mailing list|all customers|all users|customer list|distribution list)\b"
+        r".{0,100}\b(send|email|message|notify|broadcast)\b", re.I
+    ),
     "critical_asset": re.compile(
         r"\b(production|prod|customer|customer data|payment|database|db|security|"
         r"credential|permission|firewall|cluster|server)\b", re.I
