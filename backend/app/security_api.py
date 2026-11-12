@@ -5,7 +5,7 @@ import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from backend.app.engines.policy_engine import analyze_policy
 from backend.app.security_store import (
@@ -36,13 +36,22 @@ class UserCreateRequest(BaseModel):
 
 
 class EventIngestRequest(BaseModel):
-    actor: str = Field(min_length=1, max_length=120)
+    # Actor identity is always derived from the authenticated session.
+    # A client-supplied actor is intentionally not accepted as authority.
     action: str = Field(min_length=1, max_length=500)
     resource: str = Field(min_length=1, max_length=300)
     evidence_score: float = Field(default=100, ge=0, le=100)
     policy_violation: bool = False
     contradiction_detected: bool = False
     source: str = Field(default="submitted-event", min_length=1, max_length=80)
+
+    @field_validator("action", "resource", "source")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Value must not be blank.")
+        return value
 
 
 def current_user(authorization: Optional[str] = Header(default=None)):
@@ -166,7 +175,7 @@ def ingest_event(request: EventIngestRequest,
     if not reason:
         reason = "No configured text rule was triggered by the submitted event."
     event_id = add_security_event(
-        severity, "ACTION_EVALUATED", request.actor, request.action,
+        severity, "ACTION_EVALUATED", user["username"], request.action,
         request.resource, decision, reason, request.source,
     )
     return {
@@ -174,5 +183,8 @@ def ingest_event(request: EventIngestRequest,
         "risk_score": score, "reason": reason, "policy_analysis": analysis,
         "notification_recommended": severity in {"CRITICAL", "HIGH"},
         "execution_performed": False,
+        "actor": user["username"],
+        "actor_identity_verified": True,
+        "source_is_client_claimed": True,
         "source_note": "This endpoint evaluates a submitted event; it does not intercept or stop an external action.",
     }
