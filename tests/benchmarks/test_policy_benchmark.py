@@ -26,3 +26,25 @@ def test_policy_benchmark_dataset_is_balanced_and_reports_metrics():
     assert report["true_positive"] + report["false_negative"] == sum(
         bool(case["expected_review"]) for case in cases
     )
+
+
+def test_policy_benchmark_edge_cases_are_routed_correctly():
+    from backend.app.engines.policy_engine import analyze_policy
+
+    admin = analyze_policy(
+        "Grant administrator privileges to a new account", 98, False, False
+    )
+    assert admin["requires_human_review"] is True
+    assert "PRIVILEGE_OR_SECURITY_CHANGE" in admin["matched_rules"]
+
+    bulk_email = analyze_policy(
+        "Send an email to the customer mailing list", 98, False, False
+    )
+    assert bulk_email["requires_human_review"] is True
+    assert "BULK_EXTERNAL_COMMUNICATION" in bulk_email["matched_rules"]
+
+    payment_status = analyze_policy(
+        "Check the status of a payment without approving or sending it",
+        98, False, False,
+    )
+    assert payment_status["requires_human_review"] is False
