@@ -187,3 +187,30 @@ def test_login_throttle_after_five_invalid_attempts(isolated_security_db):
     assert client.post("/security/login", json={
         "username": "security-admin", "password": "wrong-password"
     }).status_code == 429
+
+
+def test_login_throttle_is_persisted_and_cleared_after_success(isolated_security_db):
+    client = isolated_security_db
+    client.post("/security/bootstrap", json={
+        "bootstrap_token": "test-bootstrap-token-that-is-long-enough",
+        "username": "security-admin",
+        "password": "a-strong-test-password-123",
+    })
+    key = "testclient:security-admin"
+    for _ in range(5):
+        assert client.post("/security/login", json={
+            "username": "security-admin", "password": "wrong-password"
+        }).status_code == 401
+
+    # The failure counter is stored in SQLite, not a module-local dictionary.
+    assert security_store.login_failure_count(key) == 5
+    assert client.post("/security/login", json={
+        "username": "security-admin", "password": "a-strong-test-password-123"
+    }).status_code == 429
+
+    # Clear explicitly to model a successful login from a fresh client context.
+    security_store.clear_login_failures(key)
+    assert security_store.login_failure_count(key) == 0
+    assert client.post("/security/login", json={
+        "username": "security-admin", "password": "a-strong-test-password-123"
+    }).status_code == 200
