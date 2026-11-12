@@ -32,11 +32,11 @@ _PATTERNS = {
         r"\b(payment|funds?|bank account|customer account|wallet|transaction)\b", re.I
     ),
     "financial_operation": re.compile(
-        r"\b(transfer|send|approve|refund|charge|withdraw|pay|payment)\b", re.I
+        r"\b(transfer|send|approve|refund|charge|withdraw|pay)\b", re.I
     ),
     "privilege_asset": re.compile(
         r"\b(permission|privilege|credential|secret|access|firewall|security policy|"
-        r"iam|role)\b", re.I
+        r"iam|role|admin|administrator)\b", re.I
     ),
     "privilege_change": re.compile(
         r"\b(grant|revoke|elevate|disable|enable|rotate|reset|modify|change|remove)\b", re.I
