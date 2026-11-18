@@ -54,3 +54,20 @@ def test_invalid_action_rejected(action):
 def test_non_finite_evidence_rejected():
     with pytest.raises(ValueError):
         analyze_policy("read status", float("nan"))
+
+def test_explicitly_negated_destructive_action_is_not_flagged():
+    result = analyze_policy("Do not delete the production database")
+    assert result["risk_score"] == 0
+    assert result["matched_rules"] == []
+
+
+def test_production_deploy_still_requires_review():
+    result = analyze_policy("Deploy application to production")
+    assert result["risk_score"] == 20
+    assert result["requires_human_review"] is True
+
+
+def test_destructive_production_database_action_remains_critical():
+    result = analyze_policy("remove the production database permanently")
+    assert result["risk_score"] == 80
+    assert result["risk_level"] == "CRITICAL"

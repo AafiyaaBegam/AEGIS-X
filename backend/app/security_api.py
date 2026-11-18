@@ -1,17 +1,31 @@
+
 """Stage 6 authentication, RBAC, and explainable security-event API."""
 from __future__ import annotations
 
+from datetime import datetime
 import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from backend.app.engines.policy_engine import analyze_policy
 from backend.app.security_store import (
-    SecurityError, add_security_event, authenticate, bootstrap_admin,
-    create_user, list_security_events, list_users, login, revoke_session,
-    user_count, login_failure_count, record_login_failure, clear_login_failures,
+    SecurityError,
+    add_security_event,
+    authenticate,
+    bootstrap_admin,
+    create_user,
+    list_security_events,
+    list_users,
+    login,
+    revoke_session,
+    user_count,
+    login_failure_count,
+    record_login_failure,
+    clear_login_failures,
+    verify_security_event_chain,
 )
 
 router = APIRouter(prefix="/security", tags=["Security & access"])
@@ -148,18 +162,85 @@ def add_user(request: UserCreateRequest, user=Depends(require_roles("admin"))):
 
 
 @router.get("/events")
-def get_events(limit: int = Query(default=50, ge=1, le=500),
-               user=Depends(require_roles("admin", "operator", "auditor"))):
+def get_events(
+    limit: int = Query(default=50, ge=1, le=500),
+    user=Depends(require_roles("admin", "operator", "auditor")),
+):
     events = list_security_events(limit)
     return {"count": len(events), "events": events}
 
 
+@router.get("/events/verify")
+def verify_events(user=Depends(require_roles("admin", "operator", "auditor"))):
+    """Verify the append-only security-event hash chain."""
+    try:
+        result = verify_security_event_chain()
+        return {
+            **result,
+            "ledger": "security_events",
+            "verification_scope": "SHA-256 event hash chain",
+            "historical_proof_note": (
+                "Integrity is established from the chain initialization point; "
+                "it does not independently prove events were untampered before migration."
+            ),
+        }
+    except SecurityError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/events/export")
+def export_security_evidence(
+    user=Depends(require_roles("admin", "operator", "auditor")),
+):
+    """Download a JSON snapshot with security-event chain verification."""
+    try:
+        events = list_security_events(500)
+        verification = verify_security_event_chain()
+    except SecurityError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    exported_at = datetime.now().astimezone()
+    ledger_count = verification.get("event_count", 0)
+    complete = len(events) == ledger_count
+
+    report = {
+        "report_type": "AEGIS-X Security Evidence Report",
+        "report_version": "1.0",
+        "exported_at": exported_at.isoformat(),
+        "ledger": "security_events",
+        "exported_event_count": len(events),
+        "ledger_event_count": ledger_count,
+        "export_complete": complete,
+        "verification": {
+            **verification,
+            "scope": "SHA-256 event hash chain",
+        },
+        "historical_proof_note": (
+            "Integrity is established from the chain initialization point; "
+            "it does not independently prove events were untampered before migration."
+        ),
+        "events": events,
+    }
+
+    filename = f"aegis-security-evidence-{exported_at:%Y%m%d-%H%M%S}.json"
+    return JSONResponse(
+        content=report,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
 @router.post("/events/ingest", status_code=201)
-def ingest_event(request: EventIngestRequest,
-                 user=Depends(require_roles("admin", "operator"))):
+def ingest_event(
+    request: EventIngestRequest,
+    user=Depends(require_roles("admin", "operator")),
+):
     analysis = analyze_policy(
-        request.action, request.evidence_score,
-        request.policy_violation, request.contradiction_detected,
+        request.action,
+        request.evidence_score,
+        request.policy_violation,
+        request.contradiction_detected,
     )
     score = analysis["risk_score"]
     decision = "BLOCK" if request.policy_violation or score >= 70 else (
@@ -171,13 +252,25 @@ def ingest_event(request: EventIngestRequest,
     reason = "; ".join(item["explanation"] for item in analysis["risk_factors"])
     if not reason:
         reason = "No configured text rule was triggered by the submitted event."
+
     event_id = add_security_event(
-        severity, "ACTION_EVALUATED", user["username"], request.action,
-        request.resource, decision, reason, request.source,
+        severity,
+        "ACTION_EVALUATED",
+        user["username"],
+        request.action,
+        request.resource,
+        decision,
+        reason,
+        request.source,
     )
+
     return {
-        "event_id": event_id, "severity": severity, "decision": decision,
-        "risk_score": score, "reason": reason, "policy_analysis": analysis,
+        "event_id": event_id,
+        "severity": severity,
+        "decision": decision,
+        "risk_score": score,
+        "reason": reason,
+        "policy_analysis": analysis,
         "notification_recommended": severity in {"CRITICAL", "HIGH"},
         "execution_performed": False,
         "actor": user["username"],

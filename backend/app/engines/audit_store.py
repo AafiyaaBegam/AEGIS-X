@@ -1,4 +1,4 @@
-
+﻿
 import hashlib
 import json
 import sqlite3
@@ -243,10 +243,46 @@ def record_decision(
         )
 
         connection.commit()
+        return record_id
 
     except Exception:
         connection.rollback()
         raise
+    finally:
+        connection.close()
+
+
+
+def audit_receipt_matches(record_id, result):
+    """Confirm a committed audit row matches the decision being executed."""
+    if not isinstance(record_id, int) or isinstance(record_id, bool) or record_id < 1:
+        return False
+
+    if not AUDIT_DB_PATH.exists():
+        return False
+
+    connection = _connect()
+    try:
+        row = connection.execute(
+            """
+            SELECT action, risk_score, decision, reasons_json
+            FROM audit_records
+            WHERE id = ?
+            """,
+            (record_id,),
+        ).fetchone()
+
+        if row is None:
+            return False
+
+        return (
+            row["action"] == str(result.get("action"))
+            and float(row["risk_score"]) == float(result.get("risk_score"))
+            and row["decision"] == str(result.get("decision"))
+            and json.loads(row["reasons_json"]) == result.get("reasons")
+        )
+    except (TypeError, ValueError, KeyError, json.JSONDecodeError):
+        return False
     finally:
         connection.close()
 

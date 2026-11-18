@@ -1,0 +1,462 @@
+/* =====================================================================
+   AEGIS-X V14 — READABILITY + COMPACT CONTROL LAYOUT
+   Tuned for 1536 x 768 desktop screens. Loaded after the V13 theme.
+   Fixes: oversized checkbox inputs, micro typography, inflated empty cards,
+   compressed risk gauge and excessively tall result/evaluation panels.
+   ===================================================================== */
+
+/* Keep the Overview dense without shrinking the actual content. */
+.axv4-overview {
+  gap: 11px !important;
+  padding: 12px clamp(16px, 1.8vw, 26px) 16px !important;
+}
+
+.axv4-heading {
+  min-height: 60px !important;
+  gap: 18px !important;
+}
+.axv4-heading p {
+  font-size: 10.5px !important;
+  line-height: 1.45 !important;
+}
+.axv4-eyebrow {
+  font-size: 9px !important;
+  letter-spacing: 1.25px !important;
+}
+.axv4-live-status {
+  min-width: 190px !important;
+  padding: 9px 12px !important;
+}
+.axv4-live-status small { font-size: 8px !important; }
+.axv4-live-status strong { font-size: 12px !important; }
+.axv4-live-status span:last-child { font-size: 9px !important; }
+
+/* Compact, consistent telemetry cards with larger readable values. */
+.axv4-metrics {
+  gap: 10px !important;
+}
+.axv4-metrics > .ax-metric {
+  min-height: 84px !important;
+  padding: 10px 13px 9px !important;
+  border-radius: 12px !important;
+}
+.axv4-metrics .ax-metric-top {
+  gap: 8px !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+.axv4-metrics .ax-metric-icon {
+  width: 27px !important;
+  height: 27px !important;
+  flex-basis: 27px !important;
+}
+.axv4-metrics .ax-metric strong {
+  margin: 5px 0 1px !important;
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+}
+.axv4-metrics .ax-metric small {
+  font-size: 8.5px !important;
+  line-height: 1.35 !important;
+  letter-spacing: .2px !important;
+}
+
+/* Three dashboard cards: less empty padding, readable copy. */
+.axv4-lower-grid {
+  grid-template-columns: minmax(275px, .98fr) minmax(340px, 1.24fr) minmax(285px, 1fr) !important;
+  gap: 11px !important;
+  align-items: stretch !important;
+}
+.axv4-card {
+  min-width: 0 !important;
+  border-radius: 13px !important;
+}
+.axv4-posture-card,
+.axv4-activity-card,
+.axv4-actions-card {
+  min-height: 154px !important;
+  padding: 13px 14px 12px !important;
+}
+.axv4-card-heading {
+  gap: 10px !important;
+  align-items: center !important;
+}
+.axv4-card-heading small {
+  font-size: 8.5px !important;
+  line-height: 1.35 !important;
+  letter-spacing: .9px !important;
+}
+.axv4-card-heading h2 {
+  margin-top: 4px !important;
+  font-size: 16.5px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.25px !important;
+}
+.axv4-card-heading p {
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+.axv4-card-icon {
+  width: 31px !important;
+  height: 31px !important;
+  flex-basis: 31px !important;
+}
+
+/* Rebuild the risk gauge layout; avoid the old tiny scaled text collision. */
+.axv4-posture-body {
+  gap: 11px !important;
+  margin-top: 9px !important;
+  align-items: center !important;
+}
+.axv4-posture-score {
+  width: 104px !important;
+  flex: 0 0 104px !important;
+  transform: none !important;
+}
+.ax-gauge-wrap {
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+.ax-gauge {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 86px !important;
+  height: 86px !important;
+  border-radius: 50% !important;
+  background: conic-gradient(
+    var(--gauge-color, #67e8c7) 0 var(--gauge-value, 0%),
+    rgba(116, 167, 204, .20) var(--gauge-value, 0%) 100%
+  ) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--gauge-color, #67e8c7) 22%, transparent),
+              inset 0 0 0 1px rgba(255,255,255,.08) !important;
+}
+.ax-gauge::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 7px !important;
+  border: 1px solid rgba(130, 199, 229, .22) !important;
+  border-radius: 50% !important;
+  background: linear-gradient(145deg, #0d2b49, #081a30) !important;
+}
+.ax-gauge-inner {
+  position: relative !important;
+  z-index: 1 !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  text-align: center !important;
+}
+.ax-gauge-inner strong {
+  display: block !important;
+  color: #f3fbff !important;
+  font: 700 22px/1 'Space Grotesk', sans-serif !important;
+  letter-spacing: -.6px !important;
+}
+.ax-gauge-inner span {
+  display: block !important;
+  color: #a5c4da !important;
+  font: 8px/1 'DM Mono', monospace !important;
+  letter-spacing: .5px !important;
+  white-space: nowrap !important;
+}
+.ax-gauge-caption {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  color: #b7d2e3 !important;
+  font: 8.5px/1.2 'DM Sans', sans-serif !important;
+  white-space: nowrap !important;
+}
+.axv4-posture-score .ax-gauge { width: 82px !important; height: 82px !important; }
+.axv4-posture-score .ax-gauge-inner strong { font-size: 21px !important; }
+.axv4-posture-score .ax-gauge-caption { font-size: 8px !important; }
+
+/* Health checklist text is no longer miniature. */
+.axv4-posture-checks {
+  gap: 7px !important;
+}
+.axv4-posture-checks > div {
+  gap: 7px !important;
+}
+.axv4-posture-checks > div > span {
+  width: 17px !important;
+  height: 17px !important;
+  flex-basis: 17px !important;
+  font-size: 9px !important;
+}
+.axv4-posture-checks p b {
+  font-size: 9.5px !important;
+  line-height: 1.25 !important;
+}
+.axv4-posture-checks p small {
+  font-size: 8px !important;
+  line-height: 1.3 !important;
+  letter-spacing: .1px !important;
+}
+
+/* Evidence stream: clearer action names, dates and decisions. */
+.axv4-recent-list { margin-top: 7px !important; }
+.axv4-recent-row {
+  gap: 9px !important;
+  padding: 7px 0 !important;
+}
+.axv4-recent-icon {
+  width: 28px !important;
+  height: 28px !important;
+  flex-basis: 28px !important;
+}
+.axv4-recent-copy { gap: 3px !important; }
+.axv4-recent-copy strong {
+  font-size: 9.5px !important;
+  line-height: 1.25 !important;
+}
+.axv4-recent-copy small {
+  font-size: 7.8px !important;
+  line-height: 1.25 !important;
+}
+.axv4-recent-row .ax-decision {
+  font-size: 7.5px !important;
+  padding: 4px 6px !important;
+}
+.axv4-link-button {
+  padding: 6px 8px !important;
+  font-size: 8.5px !important;
+}
+
+/* Operator action cards: readable labels without wasting panel space. */
+.axv4-action-grid {
+  gap: 7px !important;
+  margin-top: 9px !important;
+}
+.axv4-action-grid button {
+  min-height: 46px !important;
+  padding: 7px 8px !important;
+  column-gap: 8px !important;
+}
+.axv4-action-grid button > span {
+  width: 28px !important;
+  height: 28px !important;
+}
+.axv4-action-grid button b {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+.axv4-action-grid button small {
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+}
+
+/* Evaluation and result panels should fit their content, not stretch into blank boxes. */
+.axv4-workbench {
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr) !important;
+  align-items: start !important;
+  gap: 12px !important;
+}
+.axv4-workbench > .axv4-card {
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+  padding: 16px 17px !important;
+}
+.axv4-eval-form {
+  display: grid !important;
+  gap: 9px !important;
+  margin-top: 12px !important;
+}
+.axv4-eval-form > label,
+.axv4-range-head label {
+  margin: 0 !important;
+  font: 600 9px/1.3 'DM Mono', monospace !important;
+  letter-spacing: .75px !important;
+}
+.axv4-eval-form textarea {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 58px !important;
+  padding: 10px 12px !important;
+  border-radius: 9px !important;
+  font: 11px/1.5 'DM Sans', sans-serif !important;
+  resize: vertical !important;
+}
+.axv4-range-head strong {
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+.axv4-range-head strong small {
+  font-size: 9px !important;
+}
+.axv4-eval-form .ax-range {
+  width: 100% !important;
+  min-height: 18px !important;
+  margin: 0 !important;
+  accent-color: #68f2cf !important;
+}
+.axv4-range-labels {
+  font: 8px/1.3 'DM Sans', sans-serif !important;
+}
+
+/* Critical fix: the old text-input rule was stretching checkboxes to 100% x 46px. */
+.axv4-eval-form input:not([type="range"]):not([type="checkbox"]) {
+  width: 100% !important;
+  min-height: 42px !important;
+  padding: 10px 12px !important;
+  font-size: 11px !important;
+}
+.axv4-eval-form .ax-checks {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 6px !important;
+  margin: 2px 0 !important;
+}
+.axv4-eval-form .ax-checks label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  width: fit-content !important;
+  min-height: 25px !important;
+  margin: 0 !important;
+  padding: 3px 0 !important;
+  color: #d4e8f4 !important;
+  font: 10px/1.35 'DM Sans', sans-serif !important;
+  white-space: normal !important;
+}
+.axv4-eval-form .ax-checks input[type="checkbox"] {
+  appearance: auto !important;
+  display: inline-block !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+  max-height: 16px !important;
+  flex: 0 0 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  accent-color: #68f2cf !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.axv4-eval-form .ax-primary-button,
+.axv4-workbench .ax-primary-button {
+  justify-self: start !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  gap: 9px !important;
+  font-size: 10.5px !important;
+}
+
+/* Risk result: show a real, legible gauge and keep the card content-sized. */
+.axv4-result-content {
+  display: grid !important;
+  gap: 12px !important;
+  margin-top: 12px !important;
+}
+.axv4-result-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+}
+.axv4-result-main .ax-gauge-wrap {
+  transform: none !important;
+  transform-origin: center !important;
+  margin: 0 !important;
+}
+.axv4-result-main .ax-gauge {
+  width: 96px !important;
+  height: 96px !important;
+}
+.axv4-result-main .ax-gauge-inner strong { font-size: 24px !important; }
+.axv4-result-main .ax-gauge-caption { font-size: 9px !important; }
+.axv4-result-main .ax-decision {
+  align-self: center !important;
+  font-size: 9px !important;
+  padding: 6px 9px !important;
+}
+.axv4-result-content > p {
+  margin: 0 !important;
+  color: #d2e5f1 !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+.axv4-result-content .ax-reason-list,
+.axv4-result-content .ax-reason-list li {
+  font-size: 10px !important;
+  line-height: 1.5 !important;
+}
+.axv4-result-foot {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font: 8px/1.35 'DM Mono', monospace !important;
+}
+.axv4-empty-result {
+  min-height: 148px !important;
+  margin-top: 10px !important;
+  padding: 15px !important;
+}
+.axv4-empty-result strong { font-size: 14px !important; }
+.axv4-empty-result p { font-size: 10px !important; line-height: 1.5 !important; }
+.axv4-empty-result span { font-size: 8px !important; }
+.axv4-api-status { font-size: 8px !important; }
+.axv4-footer {
+  padding-top: 8px !important;
+  font-size: 8px !important;
+}
+
+/* Secondary screens: bring headings, cards, table text and controls to the same scale. */
+.ax-content:not(.axv4-overview) .ax-panel-heading h2,
+.ax-content:not(.axv4-overview) .ax-panel-heading h3 {
+  font-size: 17px !important;
+}
+.ax-content:not(.axv4-overview) .ax-panel-heading p,
+.ax-content:not(.axv4-overview) .ax-panel-subtitle {
+  font-size: 10.5px !important;
+}
+.ax-content:not(.axv4-overview) .ax-section-kicker,
+.ax-content:not(.axv4-overview) .ax-live-tag,
+.ax-content:not(.axv4-overview) .ax-count-label {
+  font-size: 8.5px !important;
+}
+.ax-content:not(.axv4-overview) .ax-scenario-card strong { font-size: 14px !important; }
+.ax-content:not(.axv4-overview) .ax-scenario-card small,
+.ax-content:not(.axv4-overview) .ax-scenario-card p { font-size: 10px !important; }
+.ax-content:not(.axv4-overview) .ax-step-row strong { font-size: 11px !important; }
+.ax-content:not(.axv4-overview) .ax-step-row small { font-size: 8.5px !important; }
+.ax-content:not(.axv4-overview) .ax-table th { font-size: 9px !important; }
+.ax-content:not(.axv4-overview) .ax-table td { font-size: 10px !important; }
+.ax-content:not(.axv4-overview) .ax-security-event p { font-size: 10px !important; }
+
+/* Medium desktop/tablet: retain clear typography while stacking only when needed. */
+@media (max-width: 1180px) {
+  .axv4-lower-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .axv4-actions-card { grid-column: 1 / -1 !important; }
+}
+@media (max-width: 900px) {
+  .axv4-lower-grid,
+  .axv4-workbench { grid-template-columns: 1fr !important; }
+  .axv4-actions-card { grid-column: auto !important; }
+  .axv4-workbench > .axv4-card { width: 100% !important; }
+}
+@media (max-width: 620px) {
+  .axv4-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .axv4-posture-card,
+  .axv4-activity-card,
+  .axv4-actions-card { padding: 13px !important; }
+  .axv4-action-grid button b { font-size: 9px !important; }
+  .axv4-action-grid button small { font-size: 8px !important; }
+  .axv4-eval-form .ax-checks label { font-size: 10px !important; }
+}

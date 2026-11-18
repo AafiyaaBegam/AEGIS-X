@@ -1,0 +1,40 @@
+﻿services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      AEGIS_ENV: production
+      AEGIS_AUTH_REQUIRED: "1"
+      AEGIS_TOKEN_SECRET: ${AEGIS_TOKEN_SECRET:?Set AEGIS_TOKEN_SECRET in .env}
+      AEGIS_BOOTSTRAP_TOKEN: ${AEGIS_BOOTSTRAP_TOKEN:?Set AEGIS_BOOTSTRAP_TOKEN in .env}
+      AEGIS_TOKEN_TTL_SECONDS: ${AEGIS_TOKEN_TTL_SECONDS:-3600}
+    volumes:
+      - aegis_data:/app/data
+    expose:
+      - "8001"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  aegis_data:

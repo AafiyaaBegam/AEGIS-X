@@ -45,3 +45,40 @@ AEGIS-X-Stage5-Source.zip
 *.bak
 *-backup
 *.audit-backup
+frontend/node_modules/
+
+# AEGIS-X runtime data and secrets
+data/
+!data/.gitkeep
+
+# Timestamped development backups
+*.backup_*
+*.before-*
+*.zip
+
+# Legacy duplicate root-level Vite frontend
+/src/
+/public/
+/index.html
+/package.json
+/package-lock.json
+/vite.config.js
+
+# Local development artifacts
+.coverage
+.pytest_cache/
+*.zip
+*.pre-port-change.bak
+*.backup-*
+*.before-*
+frontend/src/*.backup*
+frontend/src/*.before-*
+
+# Frontend temporary backups
+frontend/src/*backup*
+frontend/src/*before*
+
+# Historical frontend notes
+frontend/AEGIS-X-V*-README.txt
+frontend/*NOTES*.txt
+frontend/INSTALL-NOTES.txt

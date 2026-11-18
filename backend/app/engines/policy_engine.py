@@ -72,6 +72,21 @@ def _validate(action: str, evidence_score: float, policy_violation: bool,
         raise ValueError("contradiction_detected must be a boolean")
 
 
+
+
+def _has_unnegated_match(pattern: re.Pattern, action: str) -> bool:
+    """Ignore action verbs immediately preceded by explicit negation."""
+    negations = {"not", "never", "dont", "cannot", "cant",
+                 "mustnt", "shouldnt", "wont"}
+
+    for match in pattern.finditer(action):
+        prefix = action[max(0, match.start() - 40):match.start()].lower()
+        words = re.findall(r"\b[\w']+\b", prefix)
+        if words and words[-1].replace("'", "") in negations:
+            continue
+        return True
+    return False
+
 def analyze_policy(action: str, evidence_score: float = 100,
                    policy_violation: bool = False,
                    contradiction_detected: bool = False) -> dict[str, Any]:
@@ -96,19 +111,19 @@ def analyze_policy(action: str, evidence_score: float = 100,
         add("CONTRADICTORY_EVIDENCE", 30,
             "The request was marked as containing contradictory evidence.")
 
-    destructive = bool(_PATTERNS["destructive_operation"].search(action))
+    destructive = _has_unnegated_match(_PATTERNS["destructive_operation"], action)
     critical_target = bool(_PATTERNS["critical_data_target"].search(action))
-    high_impact = bool(_PATTERNS["high_impact_operation"].search(action))
+    high_impact = _has_unnegated_match(_PATTERNS["high_impact_operation"], action)
     production = bool(_PATTERNS["production_environment"].search(action))
-    production_change = production and bool(_PATTERNS["production_change"].search(action))
+    production_change = production and _has_unnegated_match(_PATTERNS["production_change"], action)
     financial = (bool(_PATTERNS["financial_asset"].search(action))
-                 and bool(_PATTERNS["financial_operation"].search(action)))
+                 and _has_unnegated_match(_PATTERNS["financial_operation"], action))
     privilege_change = (bool(_PATTERNS["privilege_asset"].search(action))
-                        and bool(_PATTERNS["privilege_change"].search(action)))
+                        and _has_unnegated_match(_PATTERNS["privilege_change"], action))
     bulk_communication = bool(
         _PATTERNS["bulk_external_communication"].search(action)
     )
-    irreversible = bool(_PATTERNS["irreversible"].search(action))
+    irreversible = _has_unnegated_match(_PATTERNS["irreversible"], action)
     critical_asset = bool(_PATTERNS["critical_asset"].search(action))
 
     if high_impact:

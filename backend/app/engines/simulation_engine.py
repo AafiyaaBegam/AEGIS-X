@@ -1,6 +1,7 @@
-"""Deterministic, rule-based preview of a proposed multi-step action plan.
+"""Deterministic heuristic preview of proposed multi-step action plans.
 
-This module never executes supplied actions. Risk estimates are heuristics.
+This module never executes supplied actions or inspects live infrastructure.
+Dependency and blast-radius estimates are based only on action wording.
 """
 from __future__ import annotations
 
@@ -10,19 +11,28 @@ from typing import Any
 from backend.app.engines.policy_engine import analyze_policy
 
 IRREVERSIBLE = re.compile(
-    r"\b(delete|drop|erase|wipe|destroy|truncate|overwrite|revoke|terminate|purge)\b",
-    re.I,
+    r"\b(delete|drop|erase|wipe|destroy|truncate|overwrite|revoke|terminate|purge)\b", re.I
 )
 CRITICAL = re.compile(
-    r"\b(production|prod|customer|customer data|payment(?:\s*gateway)?|database|db|security|credential|permission|firewall|cluster|server)\b",
-    re.I,
+    r"\b(production|prod|customer|customer data|payment(?:\s*gateway)?|database|db|security|credential|permission|firewall|cluster|server)\b", re.I
 )
 CHANGE = re.compile(
-    r"\b(deploy|migrate|update|change|restart|disable|enable|modify|rotate|transfer|send|approve|delete|remove|drop|overwrite|revoke|terminate|refund|charge|withdraw)\b",
-    re.I,
+    r"\b(deploy|migrate|update|change|restart|disable|enable|modify|rotate|transfer|send|approve|delete|remove|drop|overwrite|revoke|terminate|refund|charge|withdraw)\b", re.I
 )
 PRODUCTION = re.compile(r"\b(production|prod)\b", re.I)
 PAYMENT = re.compile(r"\bpayment(?:\s*gateway)?\b", re.I)
+
+RESOURCE_PATTERNS = {
+    "database": r"\b(database|databases|db|sql|postgres(?:ql)?|mysql)\b",
+    "customer_data": r"\b(customer|customers|customer data|personal data|user records)\b",
+    "payment_system": r"\b(payment|payments|payment gateway|billing|transaction)\b",
+    "application": r"\b(application|app|web app|frontend|backend|service)\b",
+    "production_environment": r"\b(production|prod)\b",
+    "credentials": r"\b(credential|credentials|secret|secrets|api key|token|password)\b",
+    "security_controls": r"\b(security|permission|permissions|role|access control|firewall)\b",
+    "infrastructure": r"\b(server|cluster|kubernetes|k8s|cloud|instance)\b",
+    "backup": r"\b(backup|snapshot|restore point)\b",
+}
 
 
 def _step_details(action: str, index: int) -> dict[str, Any]:
@@ -38,19 +48,15 @@ def _step_details(action: str, index: int) -> dict[str, Any]:
     if critical:
         risk += 25
         reasons.append("Mentions a potentially critical system or asset")
-
     if irreversible:
         risk += 35
         reasons.append("Contains an action that may be difficult to reverse")
-
     if production_change:
         risk += 20
         reasons.append("Production changes require human approval")
-
     if PRODUCTION.search(action) and irreversible:
         risk += 30
         reasons.append("Irreversible change appears to target production")
-
     if payment_change:
         risk += 20
         reasons.append("Financial operations require authorized human review")
@@ -59,18 +65,12 @@ def _step_details(action: str, index: int) -> dict[str, Any]:
     policy_analysis = analyze_policy(action)
     risk = max(risk, policy_analysis["risk_score"])
 
-    # Enforce the shared policy engine's decision signals in simulation too.
     if policy_analysis["requires_human_review"]:
         reasons.append("Shared policy analysis requires human review")
 
     if risk >= 70 or (irreversible and critical):
         decision = "BLOCK"
-    elif (
-        policy_analysis["requires_human_review"]
-        or risk >= 60
-        or production_change
-        or payment_change
-    ):
+    elif policy_analysis["requires_human_review"] or risk >= 60 or production_change or payment_change:
         decision = "REVIEW"
     else:
         decision = "ALLOW"
@@ -82,17 +82,11 @@ def _step_details(action: str, index: int) -> dict[str, Any]:
             "Use a dry run or reversible change where possible",
         ])
     if critical:
-        alternatives.append(
-            "Require authorized human approval and a maintenance window"
-        )
+        alternatives.append("Require authorized human approval and a maintenance window")
     if not alternatives:
-        alternatives.append(
-            "Validate in a staging or sandbox environment first"
-        )
+        alternatives.append("Validate in a staging or sandbox environment first")
     if index > 1:
-        alternatives.append(
-            "Confirm earlier steps succeeded before continuing"
-        )
+        alternatives.append("Confirm earlier steps succeeded before continuing")
 
     return {
         "step": index,
@@ -109,11 +103,62 @@ def _step_details(action: str, index: int) -> dict[str, Any]:
     }
 
 
+def _resources_for(action: str) -> list[str]:
+    return [
+        name for name, pattern in RESOURCE_PATTERNS.items()
+        if re.search(pattern, action, re.I)
+    ]
+
+
+def _dependency_analysis(steps: list[dict[str, Any]]) -> dict[str, Any]:
+    """Infer possible shared-resource links from action text only."""
+    resources = {
+        step["step"]: _resources_for(step["action"])
+        for step in steps
+    }
+    edges = []
+
+    for before in range(1, len(steps) + 1):
+        for after in range(before + 1, len(steps) + 1):
+            shared = sorted(set(resources[before]) & set(resources[after]))
+            if shared:
+                edges.append({
+                    "from_step": before,
+                    "to_step": after,
+                    "shared_resources": shared,
+                    "basis": "shared_resource_keyword",
+                    "confidence": "heuristic",
+                })
+
+    downstream = {}
+    for step in range(1, len(steps) + 1):
+        impacted = sorted({
+            edge["to_step"] for edge in edges if edge["from_step"] == step
+        })
+        downstream[str(step)] = {
+            "downstream_steps": impacted,
+            "downstream_count": len(impacted),
+        }
+
+    return {
+        "nodes": [
+            {"step": step["step"], "resources": resources[step["step"]]}
+            for step in steps
+        ],
+        "edges": edges,
+        "downstream_impact": downstream,
+        "analysis_basis": "Action wording and shared resource keywords only",
+        "limitation": (
+            "This is a heuristic estimate. It does not inspect live infrastructure, "
+            "service topology, databases, or actual system dependencies."
+        ),
+    }
+
+
 def simulate_plan(actions: list[str]) -> dict[str, Any]:
     """Return a deterministic plan preview, with no external side effects."""
     cleaned = [
-        action.strip()
-        for action in actions
+        action.strip() for action in actions
         if isinstance(action, str) and action.strip()
     ]
     steps = [
@@ -124,7 +169,6 @@ def simulate_plan(actions: list[str]) -> dict[str, Any]:
         raise ValueError("Provide at least one non-empty action")
 
     overall_risk = max(step["risk_score"] for step in steps)
-
     if any(step["decision"] == "BLOCK" for step in steps):
         decision = "BLOCK"
     elif any(step["decision"] == "REVIEW" for step in steps):
@@ -133,12 +177,10 @@ def simulate_plan(actions: list[str]) -> dict[str, Any]:
         decision = "ALLOW"
 
     critical_steps = [
-        step["step"] for step in steps
-        if step["critical_asset_mentioned"]
+        step["step"] for step in steps if step["critical_asset_mentioned"]
     ]
     irreversible_steps = [
-        step["step"] for step in steps
-        if step["potentially_irreversible"]
+        step["step"] for step in steps if step["potentially_irreversible"]
     ]
     dependencies = [
         {
@@ -149,43 +191,52 @@ def simulate_plan(actions: list[str]) -> dict[str, Any]:
         for i in range(1, len(steps))
     ]
 
+    dependency_analysis = _dependency_analysis(steps)
+    inferred_edges = dependency_analysis["edges"]
+    max_downstream = max(
+        (item["downstream_count"] for item in dependency_analysis["downstream_impact"].values()),
+        default=0,
+    )
+    blast_radius_score = min(
+        100, overall_risk + min(20, len(inferred_edges) * 5) + min(15, max_downstream * 5)
+    )
+
     recommendations = []
     if critical_steps:
-        recommendations.append(
-            "Map affected services and data owners before approving this plan."
-        )
+        recommendations.append("Map affected services and data owners before approving this plan.")
     if irreversible_steps:
-        recommendations.append(
-            "Do not run irreversible steps until backup, rollback, and approval checks pass."
-        )
+        recommendations.append("Do not run irreversible steps until backup, rollback, and approval checks pass.")
     if any(step["decision"] == "REVIEW" for step in steps):
-        recommendations.append(
-            "Obtain explicit human authorization before proceeding with flagged steps."
-        )
+        recommendations.append("Obtain explicit human authorization before proceeding with flagged steps.")
     if len(steps) > 1:
-        recommendations.append(
-            "Execute only in a controlled environment and verify each step before the next."
-        )
+        recommendations.append("Execute only in a controlled environment and verify each step before the next.")
+    if inferred_edges:
+        recommendations.append("Review inferred shared-resource links before approving downstream actions.")
     if not recommendations:
-        recommendations.append(
-            "Validate the plan against the actual environment before execution."
-        )
+        recommendations.append("Validate the plan against the actual environment before execution.")
+
+    radius = (
+        "HIGH" if len(critical_steps) >= 2 or (critical_steps and irreversible_steps)
+        else "MEDIUM" if critical_steps or len(steps) > 2
+        else "LOW"
+    )
+    if blast_radius_score >= 85:
+        radius = "HIGH"
+    elif blast_radius_score >= 60 and radius == "LOW":
+        radius = "MEDIUM"
 
     return {
         "decision": decision,
         "overall_risk_score": overall_risk,
+        "blast_radius_score": blast_radius_score,
         "step_count": len(steps),
-        "potential_blast_radius": (
-            "HIGH"
-            if len(critical_steps) >= 2 or (critical_steps and irreversible_steps)
-            else "MEDIUM"
-            if critical_steps or len(steps) > 2
-            else "LOW"
-        ),
+        "potential_blast_radius": radius,
         "critical_steps": critical_steps,
         "irreversible_steps": irreversible_steps,
         "steps": steps,
         "dependencies": dependencies,
+        "inferred_dependencies": inferred_edges,
+        "dependency_analysis": dependency_analysis,
         "recommendations": recommendations,
         "execution_performed": False,
         "limitations": (

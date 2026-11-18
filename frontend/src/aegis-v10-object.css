@@ -1,0 +1,14 @@
+/* V10 — support the new sapphire-and-cyan 3D objects without recolouring the UI. */
+.axv4-visual-stage {
+  background:
+    radial-gradient(ellipse at 28% 50%, rgba(24, 142, 255, .25), transparent 34%),
+    radial-gradient(ellipse at 77% 46%, rgba(82, 102, 255, .22), transparent 37%),
+    linear-gradient(132deg, #07172b 0%, #09233b 48%, #111b37 100%) !important;
+  box-shadow:
+    inset 0 0 64px rgba(40, 175, 255, .15),
+    0 10px 26px rgba(0, 0, 0, .19) !important;
+}
+
+.axv4-visual-stage .ax-aegis-scene canvas {
+  filter: saturate(1.18) contrast(1.07) brightness(1.04);
+}
