@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+﻿from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
@@ -6,7 +6,8 @@ client = TestClient(app)
 
 
 def test_health_endpoint():
-    response = client.get("/health")
+    with TestClient(app) as startup_client:
+        response = startup_client.get("/health")
 
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
@@ -194,3 +195,4 @@ def test_simulation_steps_include_shared_policy_analysis():
     step = response.json()["steps"][0]
     assert step["policy_analysis"]["policy_version"] == "1.0.0"
     assert step["risk_score"] >= step["policy_analysis"]["risk_score"]
+

@@ -1,21 +1,34 @@
+
 """Stage 6 authentication, RBAC, and explainable security-event API."""
 from __future__ import annotations
 
+from datetime import datetime
 import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
 from backend.app.engines.policy_engine import analyze_policy
 from backend.app.security_store import (
-    SecurityError, add_security_event, authenticate, bootstrap_admin,
-    create_user, list_security_events, list_users, login, revoke_session,
+    SecurityError,
+    add_security_event,
+    authenticate,
+    bootstrap_admin,
+    create_user,
+    list_security_events,
+    list_users,
+    login,
+    revoke_session,
     user_count,
+    login_failure_count,
+    record_login_failure,
+    clear_login_failures,
+    verify_security_event_chain,
 )
 
 router = APIRouter(prefix="/security", tags=["Security & access"])
-_LOGIN_FAILURES: dict[str, list[float]] = {}
 
 
 class BootstrapRequest(BaseModel):
@@ -36,13 +49,22 @@ class UserCreateRequest(BaseModel):
 
 
 class EventIngestRequest(BaseModel):
-    actor: str = Field(min_length=1, max_length=120)
+    # Actor identity is always derived from the authenticated session.
+    # A client-supplied actor is intentionally not accepted as authority.
     action: str = Field(min_length=1, max_length=500)
     resource: str = Field(min_length=1, max_length=300)
     evidence_score: float = Field(default=100, ge=0, le=100)
     policy_violation: bool = False
     contradiction_detected: bool = False
     source: str = Field(default="submitted-event", min_length=1, max_length=80)
+
+    @field_validator("action", "resource", "source")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Value must not be blank.")
+        return value
 
 
 def current_user(authorization: Optional[str] = Header(default=None)):
@@ -100,20 +122,18 @@ def bootstrap(request: BootstrapRequest):
 
 @router.post("/login")
 def create_session(payload: LoginRequest, request: Request):
-    # Per-process local throttle. A shared/distributed limiter is required for
-    # multi-worker or public deployments.
-    key = f"{request.client.host if request.client else 'unknown'}:{payload.username.lower()}"
-    now = __import__("time").time()
-    recent = [stamp for stamp in _LOGIN_FAILURES.get(key, []) if now - stamp < 300]
-    _LOGIN_FAILURES[key] = recent
-    if len(recent) >= 5:
+    # SQLite-backed throttling persists across API process restarts. A shared
+    # distributed limiter is still recommended for multi-host deployments.
+    client_host = request.client.host if request.client else "unknown"
+    key = f"{client_host}:{payload.username.strip().casefold()}"
+    if login_failure_count(key) >= 5:
         raise HTTPException(status_code=429, detail="Too many sign-in attempts. Try again in five minutes.")
     try:
         result = login(payload.username, payload.password)
-        _LOGIN_FAILURES.pop(key, None)
+        clear_login_failures(key)
         return result
     except SecurityError as exc:
-        _LOGIN_FAILURES[key] = recent + [now]
+        record_login_failure(key)
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
@@ -142,18 +162,85 @@ def add_user(request: UserCreateRequest, user=Depends(require_roles("admin"))):
 
 
 @router.get("/events")
-def get_events(limit: int = Query(default=50, ge=1, le=500),
-               user=Depends(require_roles("admin", "operator", "auditor"))):
+def get_events(
+    limit: int = Query(default=50, ge=1, le=500),
+    user=Depends(require_roles("admin", "operator", "auditor")),
+):
     events = list_security_events(limit)
     return {"count": len(events), "events": events}
 
 
+@router.get("/events/verify")
+def verify_events(user=Depends(require_roles("admin", "operator", "auditor"))):
+    """Verify the append-only security-event hash chain."""
+    try:
+        result = verify_security_event_chain()
+        return {
+            **result,
+            "ledger": "security_events",
+            "verification_scope": "SHA-256 event hash chain",
+            "historical_proof_note": (
+                "Integrity is established from the chain initialization point; "
+                "it does not independently prove events were untampered before migration."
+            ),
+        }
+    except SecurityError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/events/export")
+def export_security_evidence(
+    user=Depends(require_roles("admin", "operator", "auditor")),
+):
+    """Download a JSON snapshot with security-event chain verification."""
+    try:
+        events = list_security_events(500)
+        verification = verify_security_event_chain()
+    except SecurityError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    exported_at = datetime.now().astimezone()
+    ledger_count = verification.get("event_count", 0)
+    complete = len(events) == ledger_count
+
+    report = {
+        "report_type": "AEGIS-X Security Evidence Report",
+        "report_version": "1.0",
+        "exported_at": exported_at.isoformat(),
+        "ledger": "security_events",
+        "exported_event_count": len(events),
+        "ledger_event_count": ledger_count,
+        "export_complete": complete,
+        "verification": {
+            **verification,
+            "scope": "SHA-256 event hash chain",
+        },
+        "historical_proof_note": (
+            "Integrity is established from the chain initialization point; "
+            "it does not independently prove events were untampered before migration."
+        ),
+        "events": events,
+    }
+
+    filename = f"aegis-security-evidence-{exported_at:%Y%m%d-%H%M%S}.json"
+    return JSONResponse(
+        content=report,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
 @router.post("/events/ingest", status_code=201)
-def ingest_event(request: EventIngestRequest,
-                 user=Depends(require_roles("admin", "operator"))):
+def ingest_event(
+    request: EventIngestRequest,
+    user=Depends(require_roles("admin", "operator")),
+):
     analysis = analyze_policy(
-        request.action, request.evidence_score,
-        request.policy_violation, request.contradiction_detected,
+        request.action,
+        request.evidence_score,
+        request.policy_violation,
+        request.contradiction_detected,
     )
     score = analysis["risk_score"]
     decision = "BLOCK" if request.policy_violation or score >= 70 else (
@@ -165,14 +252,29 @@ def ingest_event(request: EventIngestRequest,
     reason = "; ".join(item["explanation"] for item in analysis["risk_factors"])
     if not reason:
         reason = "No configured text rule was triggered by the submitted event."
+
     event_id = add_security_event(
-        severity, "ACTION_EVALUATED", request.actor, request.action,
-        request.resource, decision, reason, request.source,
+        severity,
+        "ACTION_EVALUATED",
+        user["username"],
+        request.action,
+        request.resource,
+        decision,
+        reason,
+        request.source,
     )
+
     return {
-        "event_id": event_id, "severity": severity, "decision": decision,
-        "risk_score": score, "reason": reason, "policy_analysis": analysis,
+        "event_id": event_id,
+        "severity": severity,
+        "decision": decision,
+        "risk_score": score,
+        "reason": reason,
+        "policy_analysis": analysis,
         "notification_recommended": severity in {"CRITICAL", "HIGH"},
         "execution_performed": False,
+        "actor": user["username"],
+        "actor_identity_verified": True,
+        "source_is_client_claimed": True,
         "source_note": "This endpoint evaluates a submitted event; it does not intercept or stop an external action.",
     }
