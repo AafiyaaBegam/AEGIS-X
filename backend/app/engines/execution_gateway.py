@@ -1,10 +1,11 @@
 """Two-phase execution gateway for harmless registered demo tools."""
 from typing import Any, Callable
+import re
 
 from backend.app.engines.policy_engine import analyze_policy
 from backend.app.engines.risk_engine import calculate_risk
 from backend.app.engines.decision_engine import evaluate_action
-from backend.app.engines.audit_store import audit_receipt_matches
+from backend.app.engines.audit_store import claim_execution_receipt
 
 
 def _read_service_status() -> dict[str, Any]:
@@ -26,6 +27,19 @@ def _create_demo_report() -> dict[str, Any]:
 _TOOL_REGISTRY: dict[str, Callable[[], dict[str, Any]]] = {
     "read_service_status": _read_service_status,
     "create_demo_report": _create_demo_report,
+}
+
+# Explicit action-to-tool authorization. Unknown combinations fail closed.
+TOOL_ACTION_RULES = {
+    "read_service_status": re.compile(
+        r"\b(read|check|get|fetch|view)\b.{0,40}"
+        r"\b(service status|service health|health status)\b",
+        re.IGNORECASE,
+    ),
+    "create_demo_report": re.compile(
+        r"\b(create|generate|build)\b.{0,40}\b(report|demo report)\b",
+        re.IGNORECASE,
+    ),
 }
 
 
@@ -66,6 +80,17 @@ def evaluate_registered_tool(
     if tool_name not in _TOOL_REGISTRY:
         decision = "BLOCK"
         reasons.append("Tool is not registered in the execution allowlist")
+    else:
+        action_rule = TOOL_ACTION_RULES.get(tool_name)
+        # REVIEW and BLOCK remain governed by policy.
+        # Only an otherwise-ALLOW action needs this additional authorization.
+        if decision == "ALLOW" and (
+            action_rule is None or not action_rule.search(action)
+        ):
+            decision = "BLOCK"
+            reasons.append(
+                "Action is not authorized for the requested tool"
+            )
 
     return {
         "tool_name": tool_name,
@@ -87,13 +112,14 @@ def execute_tool_after_audit(result: dict[str, Any], audit_record_id: int) -> di
     if result.get("decision") != "ALLOW":
         return result
 
-    if not audit_receipt_matches(audit_record_id, result):
-        raise RuntimeError("A matching persisted audit receipt is required before execution.")
-
     handler = _TOOL_REGISTRY.get(result.get("tool_name"))
     if handler is None:
         raise RuntimeError("Registered tool became unavailable before execution")
 
+    claim_execution_receipt(audit_record_id, result)
+
+    # The claim is permanent, including when a handler raises. An uncertain
+    # side effect must never be retried automatically with the same receipt.
     tool_result = handler()
     result["tool_result"] = tool_result
     result["execution_performed"] = True
@@ -123,5 +149,6 @@ def execute_registered_tool(
         policy_violation=policy_violation,
         contradiction_detected=contradiction_detected,
         result=result,
+        tool_name=tool_name,
     )
     return execute_tool_after_audit(result, audit_record_id)

@@ -1,7 +1,8 @@
-﻿"""AEGIS-X runtime configuration and production safety checks."""
+"""AEGIS-X runtime configuration and production safety checks."""
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from collections.abc import Mapping
 
 
@@ -21,6 +22,16 @@ def validate_runtime_configuration(
     if environment not in {"development", "test", "production"}:
         raise RuntimeConfigurationError(
             "AEGIS_ENV must be development, test, or production."
+        )
+
+    data_dir_value = env.get("AEGIS_DATA_DIR", "").strip()
+    if (
+        environment == "production"
+        and data_dir_value
+        and not Path(data_dir_value).is_absolute()
+    ):
+        raise RuntimeConfigurationError(
+            "Production AEGIS_DATA_DIR must be an absolute path."
         )
 
     auth_value = env.get("AEGIS_AUTH_REQUIRED", "0").strip().lower()
@@ -44,6 +55,16 @@ def validate_runtime_configuration(
         )
 
     if environment == "production":
+        if environ is None and not env.get("TURSO_DATABASE_URL", "").strip():
+            raise RuntimeConfigurationError(
+                "Production startup blocked: TURSO_DATABASE_URL is required."
+            )
+
+        if environ is None and not env.get("TURSO_AUTH_TOKEN", "").strip():
+            raise RuntimeConfigurationError(
+                "Production startup blocked: TURSO_AUTH_TOKEN is required."
+            )
+
         if not auth_required:
             raise RuntimeConfigurationError(
                 "Production startup blocked: AEGIS_AUTH_REQUIRED must be enabled."
@@ -72,4 +93,5 @@ def validate_runtime_configuration(
         "environment": environment,
         "auth_required": auth_required,
         "token_ttl_seconds": token_ttl,
+        "data_dir": data_dir_value or "data",
     }

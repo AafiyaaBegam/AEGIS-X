@@ -1,4 +1,4 @@
-
+﻿
 """AEGIS-X Stage 6 security foundation.
 
 Uses only Python's standard library for password hashing, signed bearer tokens,
@@ -15,7 +15,7 @@ import hmac
 import json
 import os
 import secrets
-import sqlite3
+from backend.app.database import sqlite3
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,7 +23,7 @@ from typing import Any
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
+DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(PROJECT_ROOT / "data"))).expanduser()
 DB_PATH = Path(os.getenv("AEGIS_SECURITY_DB", str(DATA_DIR / "aegis_security.db")))
 TOKEN_TTL_SECONDS = int(os.getenv("AEGIS_TOKEN_TTL_SECONDS", "3600"))
 ROLES = {"admin", "operator", "auditor"}
@@ -53,8 +53,9 @@ def _connect():
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=10000")
+    if not os.getenv("TURSO_DATABASE_URL", "").strip():
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=10000")
     return conn
 
 
@@ -414,12 +415,12 @@ def bootstrap_admin(
 
     if not (3 <= len(username) <= 80) or not username.strip():
         raise SecurityError(
-            "Username must contain 3–80 characters."
+            "Username must contain 3â€“80 characters."
         )
 
     if len(password) < 12 or len(password) > 128:
         raise SecurityError(
-            "Password must contain 12–128 characters."
+            "Password must contain 12â€“128 characters."
         )
 
     with _connect() as conn:
@@ -468,12 +469,12 @@ def create_user(
 
     if not (3 <= len(username) <= 80) or not username.strip():
         raise SecurityError(
-            "Username must contain 3–80 characters."
+            "Username must contain 3â€“80 characters."
         )
 
     if len(password) < 12 or len(password) > 128:
         raise SecurityError(
-            "Password must contain 12–128 characters."
+            "Password must contain 12â€“128 characters."
         )
 
     try:
@@ -865,3 +866,4 @@ def clear_login_failures(bucket_key: str) -> None:
             "DELETE FROM login_attempts WHERE bucket_hash=?",
             (digest,),
         )
+

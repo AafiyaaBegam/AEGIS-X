@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-import sqlite3
+from backend.app.database import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -13,17 +13,26 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SIMULATION_DB_PATH = Path(
     os.getenv(
         "AEGIS_SIMULATION_DB",
-        str(PROJECT_ROOT / "data" / "aegis_simulation.db"),
+        str(Path(os.getenv("AEGIS_DATA_DIR", str(PROJECT_ROOT / "data"))) / "aegis_simulation.db"),
     )
 )
 
 
+def _using_turso():
+    environment = os.getenv("AEGIS_ENV", "development").strip().lower()
+    return environment not in {"test", "testing"} and bool(
+        os.getenv("TURSO_DATABASE_URL", "").strip()
+    )
+
+
 def _connect():
-    SIMULATION_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not _using_turso():
+        SIMULATION_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(str(SIMULATION_DB_PATH), timeout=10)
     connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA busy_timeout = 10000")
-    connection.execute("PRAGMA journal_mode = WAL")
+    if not _using_turso():
+        connection.execute("PRAGMA busy_timeout = 10000")
+        connection.execute("PRAGMA journal_mode = WAL")
     return connection
 
 
@@ -102,7 +111,10 @@ def list_simulations(limit: int = 50) -> list[dict[str, Any]]:
     ):
         raise ValueError("limit must be an integer between 1 and 500.")
 
-    if not SIMULATION_DB_PATH.exists():
+    if (
+        not _using_turso()
+        and not SIMULATION_DB_PATH.exists()
+    ):
         return []
 
     with _connect() as connection:
@@ -134,3 +146,4 @@ def list_simulations(limit: int = 50) -> list[dict[str, Any]]:
         records.append(record)
 
     return records
+
