@@ -280,7 +280,7 @@ nav a[data-v]{cursor:pointer}
         <input id="authUsername" name="username" autocomplete="username" required minlength="3" maxlength="80">
       </label>
       <label class="auth-field">PASSWORD
-        <input id="authPassword" name="password" type="password" autocomplete="current-password" required minlength="12" maxlength="128">
+        <input id="authPassword" name="password" type="password" autocomplete="current-password" required maxlength="128">
       </label>
       <button class="auth-btn" type="button" id="authBootstrapToggle" hidden>Create the first administrator</button>
       <label class="auth-field" id="authBootstrapField" hidden>ONE-TIME BOOTSTRAP TOKEN
@@ -597,6 +597,7 @@ if(getToken()){
 $('authBootstrapToggle').onclick=()=>setBootstrapMode(!bootstrapMode);
 
 $('authOpen').onclick=()=>{
+  checkBootstrap();
   $('authError').textContent='';
   $('authModal').hidden=false;
   $('authUsername').focus();
