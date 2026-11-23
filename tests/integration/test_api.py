@@ -10,7 +10,13 @@ def test_health_endpoint():
         response = startup_client.get("/health")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "healthy"
+    body = response.json()
+    assert body["status"] == "healthy"
+    assert body["checks"]["audit_database"] == "ok"
+    assert body["checks"]["approval_database"] == "ok"
+    assert body["checks"]["security_database"] == "ok"
+    assert body["checks"]["audit_chain"] == "valid"
+    assert body["checks"]["security_event_chain"] == "valid"
 
 
 def test_unsafe_production_database_action_is_blocked():
