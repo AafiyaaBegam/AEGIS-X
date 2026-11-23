@@ -214,7 +214,7 @@ A React-based interface for interacting with the control plane, inspecting decis
 
 | Frontend tooling | Vite 6 |
 
-| Database | SQLite |
+| Database | SQLite for local development/tests; Turso Cloud for hosted production mode |
 
 | Authentication | Signed bearer sessions |
 
@@ -542,7 +542,7 @@ AEGIS-X is a development and portfolio prototype, not a production-certified sec
 
 
 
-**Development prototype — local validation completed; final documentation, demo packaging, and deployment validation remain.**
+**Development prototype — automated backend tests and frontend production build pass in CI. Hosted deployment is not considered complete until the Render backend, Turso connection, first-admin bootstrap, authenticated dashboard, and live evidence checks are verified.**
 
 
 
