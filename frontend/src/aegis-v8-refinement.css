@@ -38,8 +38,8 @@
   }
 
   .axv4-hero {
-    height: 286px !important;
-    min-height: 286px !important;
+    height: 326px !important;
+    min-height: 326px !important;
     grid-template-columns: minmax(295px, .76fr) minmax(0, 1.48fr) !important;
   }
 
@@ -183,7 +183,7 @@
 @media (min-width: 1101px) and (max-height: 700px) {
   .axv4-overview { gap: 8px !important; padding-top: 8px !important; }
   .axv4-heading { min-height: 54px !important; }
-  .axv4-hero { height: 258px !important; min-height: 258px !important; }
+  .axv4-hero { height: 286px !important; min-height: 286px !important; }
   .axv4-hero-copy { padding-top: 10px !important; padding-bottom: 10px !important; }
   .axv4-hero-kicker { margin-top: 7px !important; }
   .axv4-hero-copy h2 { font-size: 25px !important; margin: 5px 0 !important; }

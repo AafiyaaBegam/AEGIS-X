@@ -1,0 +1,81 @@
+﻿/* AEGIS-X V15 — COMMAND SURFACE POLISH */
+.axv4-overview {
+  position: relative !important;
+  isolation: isolate !important;
+  background:
+    radial-gradient(ellipse at 78% 8%, rgba(22,115,190,.13), transparent 36%),
+    radial-gradient(ellipse at 8% 55%, rgba(20,160,155,.07), transparent 32%),
+    linear-gradient(145deg,#071321 0%,#091827 52%,#071321 100%) !important;
+}
+
+.axv4-heading {
+  padding: 4px 0 13px !important;
+  border-bottom: 1px solid rgba(105,190,235,.19) !important;
+}
+
+.axv4-heading h1 {
+  letter-spacing: -1.1px !important;
+  text-shadow: 0 0 24px rgba(67,174,255,.15) !important;
+}
+
+.axv4-hero {
+  border: 1px solid rgba(77,169,226,.24) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(120deg,rgba(13,37,60,.96),rgba(8,24,42,.93)) !important;
+  box-shadow: 0 16px 42px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.055) !important;
+}
+
+.axv4-hero-copy h2 {
+  letter-spacing: -1.1px !important;
+  text-shadow: 0 0 25px rgba(56,173,255,.17) !important;
+}
+
+.axv4-visual-wrap {
+  border: 1px solid rgba(70,192,239,.29) !important;
+  border-radius: 16px !important;
+  background: radial-gradient(ellipse at center,rgba(15,77,111,.30),rgba(5,17,31,.95) 75%) !important;
+  box-shadow: inset 0 0 35px rgba(34,160,220,.08),0 12px 32px rgba(0,0,0,.22) !important;
+}
+
+.axv4-metrics > .ax-metric {
+  min-height: 88px !important;
+  border-radius: 13px !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.09) !important;
+  transition: transform .2s ease,box-shadow .2s ease,border-color .2s ease !important;
+}
+
+.axv4-metrics > .ax-metric:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 17px 34px rgba(0,0,0,.30),0 0 20px rgba(70,190,255,.10) !important;
+}
+
+.axv4-card {
+  border: 1px solid rgba(91,164,207,.25) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(145deg,rgba(15,34,53,.97),rgba(9,24,39,.98)) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.19),inset 0 1px rgba(255,255,255,.045) !important;
+}
+
+.axv4-card h3,
+.axv4-card h4 {
+  letter-spacing: -.25px !important;
+}
+
+.axv4-workbench > .axv4-card {
+  border-color: rgba(79,170,218,.29) !important;
+}
+
+.axv4-footer {
+  border-top: 1px solid rgba(105,190,235,.16) !important;
+  padding-top: 10px !important;
+}
+
+@media (max-width: 900px) {
+  .axv4-hero { border-radius: 13px !important; }
+  .axv4-card { border-radius: 12px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axv4-metrics > .ax-metric { transition: none !important; }
+  .axv4-metrics > .ax-metric:hover { transform: none !important; }
+}

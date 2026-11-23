@@ -12,6 +12,7 @@ import './aegis-v8-refinement.css'
 import './aegis-v10-object.css'
 import './aegis-v13-radiance.css'
 import './aegis-v14-readability.css'
+import './aegis-v15-command-polish.css';
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

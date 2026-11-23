@@ -79,40 +79,40 @@ export default function AegisScene() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.58;
+    renderer.toneMappingExposure = 1.18;
     host.appendChild(renderer.domElement);
 
     const root = new THREE.Group();
     scene.add(root);
 
-    scene.add(new THREE.AmbientLight(0xd8f4ff, 1.92));
-    scene.add(new THREE.HemisphereLight(0xd6f5ff, 0x102447, 1.34));
-    const key = new THREE.DirectionalLight(0xffffff, 6.4);
+    scene.add(new THREE.AmbientLight(0xd8f4ff, 0.52));
+    scene.add(new THREE.HemisphereLight(0xd6f5ff, 0x102447, 0.58));
+    const key = new THREE.DirectionalLight(0xffffff, 2.2);
     key.position.set(-4.5, 5.5, 8);
     scene.add(key);
-    const cyanFill = new THREE.PointLight(0x48e7ff, 94, 13, 1.65);
+    const cyanFill = new THREE.PointLight(0x48e7ff, 11, 13, 1.65);
     cyanFill.position.set(-2.15, 0.55, 3.0);
     scene.add(cyanFill);
-    const blueFill = new THREE.PointLight(0x368eff, 76, 15, 1.75);
+    const blueFill = new THREE.PointLight(0x368eff, 9, 15, 1.75);
     blueFill.position.set(2.7, 0.75, 3.2);
     scene.add(blueFill);
-    const planetKey = new THREE.DirectionalLight(0xe4fbff, 4.1);
+    const planetKey = new THREE.DirectionalLight(0xe4fbff, 1.8);
     planetKey.position.set(4.8, 3.2, 5.5);
     scene.add(planetKey);
-    const planetRim = new THREE.PointLight(0x45d8ff, 66, 9.5, 1.7);
+    const planetRim = new THREE.PointLight(0x45d8ff, 9, 9.5, 1.7);
     planetRim.position.set(3.2, -0.1, -1.2);
     scene.add(planetRim);
-    const violetRim = new THREE.PointLight(0xa28aff, 38, 18, 2);
+    const violetRim = new THREE.PointLight(0xa28aff, 3.5, 18, 2);
     violetRim.position.set(2.3, 2.1, -2.6);
     scene.add(violetRim);
 
     // Broad studio-style highlights make the shield read as metal rather than
     // a flat, self-lit icon. The lights are positioned in front of the object.
-    const shieldStudio = new THREE.SpotLight(0xffffff, 148, 16, Math.PI / 4.5, 0.42, 1.25);
+    const shieldStudio = new THREE.SpotLight(0xffffff, 20, 16, Math.PI / 4.5, 0.42, 1.25);
     shieldStudio.position.set(-3.6, 4.1, 5.8);
     shieldStudio.target.position.set(-1.72, 0.05, 0.45);
     scene.add(shieldStudio, shieldStudio.target);
-    const shieldEdgeLight = new THREE.PointLight(0x8df4ff, 58, 8.5, 1.6);
+    const shieldEdgeLight = new THREE.PointLight(0x8df4ff, 9, 8.5, 1.6);
     shieldEdgeLight.position.set(-3.1, -0.9, 2.5);
     scene.add(shieldEdgeLight);
 
@@ -125,7 +125,7 @@ export default function AegisScene() {
     earthGroup.scale.setScalar(1.36);
     root.add(earthGroup);
 
-    const earthGlow = addGlow(earthGroup, new THREE.Vector3(0, 0, -1.05), 4.45, 0x159cff, 0.86);
+    const earthGlow = addGlow(earthGroup, new THREE.Vector3(0, 0, -1.05), 4.45, 0x159cff, 0.48);
     earthGlow.renderOrder = 0;
 
     // A true satellite-textured Earth. Surface routes and cloud detail rotate
@@ -139,8 +139,8 @@ export default function AegisScene() {
       metalness: 0.09,
       clearcoat: 0.78,
       clearcoatRoughness: 0.18,
-      emissive: 0x0b4a89,
-      emissiveIntensity: 0.32,
+      emissive: 0x061d38,
+      emissiveIntensity: 0.12,
     });
     const earth = new THREE.Mesh(new THREE.SphereGeometry(1.2, 144, 144), earthMaterial);
     planetSurface.add(earth);
@@ -156,8 +156,8 @@ export default function AegisScene() {
         texture.magFilter = THREE.LinearFilter;
         earthMaterial.map = texture;
         earthMaterial.emissiveMap = texture;
-        earthMaterial.emissive.set(0x154d83);
-        earthMaterial.emissiveIntensity = 0.22;
+        earthMaterial.emissive.set(0x061b35);
+        earthMaterial.emissiveIntensity = 0.08;
         earthMaterial.needsUpdate = true;
       },
       undefined,
@@ -169,7 +169,7 @@ export default function AegisScene() {
     const cloudMaterial = new THREE.MeshStandardMaterial({
       color: 0xa9f0ff,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.22,
       roughness: 1,
       metalness: 0,
       depthWrite: false,
@@ -229,7 +229,7 @@ export default function AegisScene() {
       new THREE.MeshBasicMaterial({
         color: 0x368eff,
         transparent: true,
-        opacity: 0.115,
+        opacity: 0.065,
         side: THREE.BackSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -311,13 +311,13 @@ export default function AegisScene() {
 
     const orbitA = new THREE.Mesh(
       new THREE.TorusGeometry(1.58, 0.006, 8, 220),
-      new THREE.MeshBasicMaterial({ color: 0x8af5ff, transparent: true, opacity: 0.55 })
+      new THREE.MeshBasicMaterial({ color: 0x8af5ff, transparent: true, opacity: 0.34 })
     );
     orbitA.rotation.set(1.08, 0.18, 0.24);
     earthGroup.add(orbitA);
     const orbitB = new THREE.Mesh(
       new THREE.TorusGeometry(1.72, 0.004, 8, 220),
-      new THREE.MeshBasicMaterial({ color: 0xb2a0ff, transparent: true, opacity: 0.36 })
+      new THREE.MeshBasicMaterial({ color: 0xb2a0ff, transparent: true, opacity: 0.22 })
     );
     orbitB.rotation.set(0.62, -0.48, -0.34);
     earthGroup.add(orbitB);
@@ -351,7 +351,7 @@ export default function AegisScene() {
     shieldGroup.rotation.y = -0.11;
     shieldGroup.rotation.x = 0.025;
     root.add(shieldGroup);
-    addGlow(shieldGroup, new THREE.Vector3(0, 0.06, -0.52), 4.05, 0x168eff, 0.88);
+    addGlow(shieldGroup, new THREE.Vector3(0, 0.06, -0.52), 4.05, 0x168eff, 0.50);
 
     const backingGeometry = new THREE.ExtrudeGeometry(createShieldShape(1.045), {
       depth: 0.34,
@@ -366,7 +366,7 @@ export default function AegisScene() {
     shieldGroup.add(new THREE.Mesh(
       backingGeometry,
       new THREE.MeshPhysicalMaterial({
-        color: 0x405b7c,
+        color: 0x142c45,
         metalness: 0.78,
         roughness: 0.22,
         clearcoat: 0.92,
@@ -388,13 +388,13 @@ export default function AegisScene() {
     const outerShield = new THREE.Mesh(
       outerGeometry,
       new THREE.MeshPhysicalMaterial({
-        color: 0xf3fbff,
+        color: 0x213c58,
         metalness: 0.82,
         roughness: 0.16,
         clearcoat: 1,
         clearcoatRoughness: 0.09,
-        emissive: 0x176db0,
-        emissiveIntensity: 0.42,
+        emissive: 0x062e52,
+        emissiveIntensity: 0.16,
       })
     );
     shieldGroup.add(outerShield);
@@ -412,13 +412,13 @@ export default function AegisScene() {
     const innerPlate = new THREE.Mesh(
       innerGeometry,
       new THREE.MeshPhysicalMaterial({
-        color: 0x0751b4,
+        color: 0x0750a0,
         metalness: 0.46,
         roughness: 0.23,
         clearcoat: 1,
         clearcoatRoughness: 0.12,
-        emissive: 0x0879ca,
-        emissiveIntensity: 0.72,
+        emissive: 0x063e80,
+        emissiveIntensity: 0.32,
       })
     );
     shieldGroup.add(innerPlate);
@@ -428,7 +428,7 @@ export default function AegisScene() {
       new THREE.MeshBasicMaterial({
         color: 0x2b8bff,
         transparent: true,
-        opacity: 0.34,
+        opacity: 0.16,
         side: THREE.DoubleSide,
       })
     );
@@ -575,7 +575,7 @@ export default function AegisScene() {
         clearcoat: 1,
         clearcoatRoughness: 0.025,
         emissive: 0x20d8ff,
-        emissiveIntensity: 2.45,
+        emissiveIntensity: 1.15,
       })
     );
     crystal.position.set(0, 0.14, 0.005);
@@ -620,7 +620,7 @@ export default function AegisScene() {
         clearcoat: 1,
         clearcoatRoughness: 0.07,
         emissive: 0x1597c9,
-        emissiveIntensity: 0.72,
+        emissiveIntensity: 0.32,
       })
     );
     coreGroup.add(aEmblem);
@@ -754,7 +754,7 @@ export default function AegisScene() {
       const width = Math.max(host.clientWidth, 1);
       const height = Math.max(host.clientHeight, 1);
       camera.aspect = width / height;
-      camera.position.z = width < 620 ? 10.8 : 8.55;
+      camera.position.z = width < 620 ? 10.8 : 7.4;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height, false);
     };
