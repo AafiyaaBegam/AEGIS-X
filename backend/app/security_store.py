@@ -9,6 +9,7 @@ Security events are protected by an append-only SHA-256 hash chain.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import base64
 import hashlib
 import hmac
@@ -57,6 +58,24 @@ def _connect():
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout=10000")
     return conn
+
+@contextmanager
+def _managed_connection():
+    """Commit or roll back a unit of work and always release its DB connection.
+
+    The Turso serverless driver's connection context manager does not guarantee
+    that the underlying remote connection is closed. Explicit closure is
+    essential to stay within the database connection quota.
+    """
+    connection = _connect()
+    try:
+        yield connection
+        connection.commit()
+    except BaseException:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def _now() -> int:
@@ -247,7 +266,7 @@ def verify_security_event_chain():
     """Public verification function used by the API and tests."""
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         return _verify_security_event_chain(conn)
 
 
@@ -256,7 +275,7 @@ def verify_security_event_chain():
 # ---------------------------------------------------------------------
 
 def initialize():
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.executescript("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -423,7 +442,7 @@ def bootstrap_admin(
             "Password must contain 12â€“128 characters."
         )
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute("BEGIN IMMEDIATE")
 
         count = conn.execute(
@@ -478,7 +497,7 @@ def create_user(
         )
 
     try:
-        with _connect() as conn:
+        with _managed_connection() as conn:
             cur = conn.execute(
                 """
                 INSERT INTO users(username,password_hash,role,created_at)
@@ -505,7 +524,7 @@ def create_user(
 def login(username: str, password: str) -> dict[str, Any]:
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         user = conn.execute(
             """
             SELECT *
@@ -595,7 +614,7 @@ def authenticate(token: str) -> dict[str, Any]:
         if int(payload["exp"]) <= _now():
             raise SecurityError("Access token expired.")
 
-        with _connect() as conn:
+        with _managed_connection() as conn:
             row = conn.execute(
                 """
                 SELECT
@@ -636,7 +655,7 @@ def authenticate(token: str) -> dict[str, Any]:
 def revoke_session(jti: str):
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute(
             "UPDATE sessions SET revoked=1 WHERE jti=?",
             (jti,),
@@ -646,7 +665,7 @@ def revoke_session(jti: str):
 def list_users():
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         rows = conn.execute(
             """
             SELECT id,username,role,active,created_at
@@ -675,7 +694,7 @@ def add_security_event(
     """Append an event and its integrity record atomically."""
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute("BEGIN IMMEDIATE")
 
         verification = _verify_security_event_chain(conn)
@@ -769,7 +788,7 @@ def add_security_event(
 def list_security_events(limit: int = 50):
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         rows = conn.execute(
             """
             SELECT *
@@ -786,7 +805,7 @@ def list_security_events(limit: int = 50):
 def user_count() -> int:
     initialize()
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         return int(
             conn.execute(
                 "SELECT COUNT(*) FROM users"
@@ -814,7 +833,7 @@ def login_failure_count(
     cutoff = _now() - window_seconds
     digest = _login_bucket_hash(bucket_key)
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute(
             "DELETE FROM login_attempts WHERE failed_at < ?",
             (cutoff,),
@@ -837,7 +856,7 @@ def record_login_failure(bucket_key: str) -> None:
 
     digest = _login_bucket_hash(bucket_key)
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute("BEGIN IMMEDIATE")
 
         now = _now()
@@ -861,7 +880,7 @@ def clear_login_failures(bucket_key: str) -> None:
 
     digest = _login_bucket_hash(bucket_key)
 
-    with _connect() as conn:
+    with _managed_connection() as conn:
         conn.execute(
             "DELETE FROM login_attempts WHERE bucket_hash=?",
             (digest,),
