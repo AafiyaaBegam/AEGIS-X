@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import json
 import os
 from backend.app.database import sqlite3
@@ -35,9 +36,22 @@ def _connect():
         connection.execute("PRAGMA journal_mode = WAL")
     return connection
 
+@contextmanager
+def _managed_connection():
+    """Close local or remote DB connections after each simulation operation."""
+    connection = _connect()
+    try:
+        yield connection
+        connection.commit()
+    except BaseException:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
 
 def initialize():
-    with _connect() as connection:
+    with _managed_connection() as connection:
         connection.executescript("""
             CREATE TABLE IF NOT EXISTS simulation_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +92,7 @@ def record_simulation(actions: list[str], result: dict[str, Any]) -> int:
     actions_json = json.dumps(actions, separators=(",", ":"))
     result_json = json.dumps(result, separators=(",", ":"), sort_keys=True)
 
-    with _connect() as connection:
+    with _managed_connection() as connection:
         cursor = connection.execute(
             """
             INSERT INTO simulation_records (
@@ -117,7 +131,7 @@ def list_simulations(limit: int = 50) -> list[dict[str, Any]]:
     ):
         return []
 
-    with _connect() as connection:
+    with _managed_connection() as connection:
         table = connection.execute(
             """
             SELECT name FROM sqlite_master
