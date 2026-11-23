@@ -165,6 +165,7 @@ def health():
     for name, connect in (
         ("audit_database", audit_store._connect),
         ("approval_database", approval_store._connect),
+        ("security_database", security_store._connect),
     ):
         connection = None
         try:
@@ -185,10 +186,20 @@ def health():
     except Exception:
         checks["audit_chain"] = "unavailable"
 
+    try:
+        security_integrity = security_store.verify_security_event_chain()
+        checks["security_event_chain"] = (
+            "valid" if security_integrity.get("valid") is True else "invalid"
+        )
+    except Exception:
+        checks["security_event_chain"] = "unavailable"
+
     if (
         checks["audit_database"] != "ok"
         or checks["approval_database"] != "ok"
+        or checks["security_database"] != "ok"
         or checks["audit_chain"] != "valid"
+        or checks["security_event_chain"] != "valid"
     ):
         raise HTTPException(
             status_code=503,
