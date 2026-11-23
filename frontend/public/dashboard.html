@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AEGIS-X</title>
+<style>
+:root{--bg:#030a18;--edge:rgba(53,170,255,.34);--cy:#35e0ff;--bl:#2f8cff;--gr:#36f0a8;--vi:#a78bff;--am:#ffc261;--rd:#ff5a72;--tx:#e6f2ff;--mu:#8fa9c4}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%;overflow-x:hidden}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:var(--tx);background:
+radial-gradient(ellipse 60% 45% at 78% -5%,rgba(32,120,255,.28),transparent 62%),
+radial-gradient(ellipse 50% 40% at 0 100%,rgba(0,205,255,.12),transparent 60%),
+linear-gradient(rgba(70,150,255,.04) 1px,transparent 1px) 0 0/44px 44px,
+linear-gradient(90deg,rgba(70,150,255,.04) 1px,transparent 1px) 0 0/44px 44px,var(--bg);}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh;width:100%;max-width:100vw;overflow-x:clip}
+aside{display:flex;flex-direction:column;gap:14px;padding:18px 14px;border-right:1px solid var(--edge);background:linear-gradient(180deg,rgba(8,24,48,.97),rgba(3,10,24,.99));position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:11px}
+.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;border:1px solid rgba(53,200,255,.55);background:radial-gradient(circle at 50% 30%,rgba(40,150,255,.4),rgba(8,26,52,.9));box-shadow:0 0 22px rgba(40,160,255,.4)}
+.brand b{font-size:19px;letter-spacing:2px}.brand b i{font-style:normal;color:var(--cy)}
+.brand small{display:block;color:#6fc8ff;font:8px monospace;letter-spacing:2px}
+.ws{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid rgba(53,170,255,.28);border-radius:9px;background:rgba(20,80,160,.25);font:700 9px monospace;letter-spacing:1px;color:#9fd3ff}
+.ws em{margin-left:auto;font-style:normal;padding:3px 7px;border-radius:5px;background:var(--cy);color:#04121f}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--gr);box-shadow:0 0 10px var(--gr)}.dot.off{background:var(--rd);box-shadow:0 0 10px var(--rd)}
+nav{display:grid;gap:6px}
+nav a{display:flex;align-items:center;gap:11px;padding:12px;border-radius:10px;border:1px solid transparent;color:#8fb0d2;font-size:13px;cursor:pointer;text-decoration:none}
+nav a:hover{color:#fff;background:rgba(35,120,255,.12)}
+nav a.on{color:#fff;border-color:rgba(70,170,255,.7);background:linear-gradient(90deg,rgba(30,120,255,.55),rgba(20,70,160,.18));box-shadow:0 0 22px rgba(35,130,255,.4),inset 3px 0 var(--cy)}
+nav span{margin-left:auto;padding:2px 8px;border-radius:99px;background:rgba(40,130,255,.25);font-size:10px}
+.side-b{margin-top:auto;display:grid;gap:9px}
+.stat{padding:11px;border:1px solid rgba(54,240,168,.35);border-radius:12px;background:linear-gradient(135deg,rgba(10,60,70,.45),rgba(6,22,42,.7));font-size:11px;display:flex;gap:9px;align-items:center}
+.stat small{display:block;color:var(--mu);font-size:10px}
+.badge{text-align:center;white-space:nowrap;padding:10px 4px;border:1px solid rgba(53,170,255,.3);border-radius:9px;color:#8fdcff;font:800 9px monospace;letter-spacing:1.2px;text-shadow:0 0 12px rgba(53,200,255,.6)}
+main{padding:0 22px 30px;min-width:0;max-width:100%}.hud{max-width:42%}.pill{white-space:nowrap}
+.top{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--edge);margin-bottom:16px}
+.top .crumb{color:var(--mu);font-size:13px}.top .crumb b{color:#fff}
+.top .sp{flex:1}
+.pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid rgba(54,240,168,.45);border-radius:99px;background:rgba(10,70,60,.3);color:var(--gr);font:700 10px monospace;letter-spacing:1px}
+.pill.off{color:#ff7a8c;border-color:rgba(255,90,110,.5);background:rgba(80,10,24,.3)}
+.note{color:#7fb4e0;font:10px monospace}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.card{border:1px solid var(--edge);border-radius:14px;background:linear-gradient(150deg,rgba(10,32,64,.85),rgba(5,15,32,.92));box-shadow:0 10px 34px rgba(0,0,0,.42),0 0 28px rgba(35,125,255,.1);padding:16px;min-width:0}
+.kpi{display:grid;grid-template-columns:48px 1fr;gap:3px 12px;align-items:center;position:relative;overflow:hidden}
+.kpi .ic{grid-row:span 3;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:rgba(35,140,255,.18);box-shadow:0 0 16px rgba(53,170,255,.3)}
+.kpi small{color:#cfe3f5;font-size:12px}.kpi strong{font-size:30px;text-shadow:0 0 18px currentColor}.kpi em{font:normal 9px monospace;color:var(--mu);letter-spacing:.6px}
+.kpi svg{position:absolute;right:6px;top:8px;width:34%;height:30px;opacity:.55;pointer-events:none}
+.kpi strong,.kpi em,.kpi small{position:relative;z-index:1}
+.hero{position:relative;height:430px;margin:16px 0;border-radius:16px;overflow:hidden;border:1px solid rgba(60,180,255,.5);box-shadow:0 0 46px rgba(35,125,255,.25),inset 0 0 60px rgba(30,110,255,.08);background:radial-gradient(ellipse 30% 60% at 62% 55%,rgba(30,130,255,.35),transparent 70%),radial-gradient(ellipse 24% 50% at 90% 50%,rgba(0,205,255,.22),transparent 70%),linear-gradient(100deg,#030a18,#06142c 60%,#041029);animation:pulse 5s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 70px rgba(35,155,255,.4),inset 0 0 60px rgba(30,110,255,.12)}}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%}
+.copy{position:relative;z-index:2;width:46%;max-width:560px;padding:34px}
+.wm{font:800 64px/1 'Segoe UI',sans-serif;letter-spacing:2px;background:linear-gradient(90deg,#fff,#a5e9ff 55%,#4aa6ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(53,170,255,.5))}
+.sub{margin-top:8px;color:#8fdcff;font:700 10px monospace;letter-spacing:2.4px}
+.copy h2{margin-top:18px;font-size:30px;line-height:1.1}.copy h2 em{font-style:normal;color:var(--cy)}
+.copy p{margin-top:12px;color:var(--mu);font-size:13px;line-height:1.6;max-width:440px}
+.btn{display:inline-flex;gap:9px;align-items:center;margin-top:18px;padding:11px 20px;border-radius:10px;border:1px solid rgba(80,190,255,.75);background:linear-gradient(135deg,rgba(20,100,220,.5),rgba(10,50,120,.4));color:#e8f7ff;font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 0 22px rgba(35,140,255,.4)}
+.btn:hover{box-shadow:0 0 34px rgba(53,190,255,.65)}
+.hud{position:absolute;z-index:3;padding:9px 13px;border:1px solid var(--edge);border-radius:10px;background:rgba(4,14,30,.8);backdrop-filter:blur(8px);font-size:12px}
+.hud small{display:block;color:var(--mu);font:8px monospace;letter-spacing:1px}
+.deck{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;align-items:stretch}
+.deck .card{display:flex;flex-direction:column}
+h3{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-bottom:12px}
+h3 a{color:var(--cy);font-size:11px;cursor:pointer}
+h3 .tag{padding:3px 10px;border-radius:99px;font:600 9px monospace;color:var(--gr);border:1px solid rgba(54,240,168,.4);background:rgba(10,70,60,.3)}
+.row{display:grid;grid-template-columns:12px 1fr auto;gap:11px;align-items:center;padding:10px 0;border-top:1px solid rgba(53,170,255,.14);font-size:12px}
+.row small{display:block;color:var(--mu);font:9px monospace}
+.chip{padding:3px 9px;border-radius:99px;font:700 9px monospace}
+.ALLOW{color:var(--gr);background:rgba(54,240,168,.12)}.REVIEW{color:var(--am);background:rgba(255,194,97,.12)}.BLOCK{color:var(--rd);background:rgba(255,90,114,.14)}
+.d.ALLOW{background:var(--gr);box-shadow:0 0 10px var(--gr)}.d.REVIEW{background:var(--am)}.d.BLOCK{background:var(--rd)}
+.d{width:9px;height:9px;border-radius:50%}
+.sec{display:grid;grid-template-columns:100px 1fr;gap:18px;align-items:center}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-size:34px;border:2px solid rgba(54,240,168,.6);background:radial-gradient(circle,rgba(54,240,168,.16),transparent 70%);box-shadow:0 0 26px rgba(54,240,168,.35),inset 0 0 18px rgba(54,240,168,.15)}
+.chk div{display:flex;justify-content:space-between;font-size:12px;padding:5px 0}.chk span{color:var(--mu)}.ok{color:var(--gr)}
+.count{font-size:30px;font-weight:700;text-shadow:0 0 18px rgba(53,170,255,.5)}.count small{font:10px monospace;color:var(--mu);margin-left:6px}
+.bar{display:grid;grid-template-columns:60px 1fr 28px;gap:9px;align-items:center;font:10px monospace;color:#9db6d0;margin-top:8px}
+.bar i{height:7px;border-radius:9px;background:rgba(53,170,255,.14);overflow:hidden}.bar b{display:block;height:100%;border-radius:9px}
+
+.hero{isolation:isolate}.sec .ring svg{width:46px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px;padding-top:12px;border-top:1px solid rgba(53,170,255,.14)}
+.stats small{display:block;color:var(--mu);font:9px monospace;letter-spacing:.8px}.stats b{font-size:20px}
+.foot{margin-top:16px;color:var(--mu);font:10px monospace;text-align:center}
+
+.hero::before{content:'';position:absolute;left:46%;top:-10%;width:34%;height:120%;background:linear-gradient(100deg,transparent,rgba(80,190,255,.10),transparent);transform:skewX(-14deg);animation:beam 7s ease-in-out infinite alternate;pointer-events:none;z-index:1}
+@keyframes beam{to{transform:skewX(-14deg) translateX(18%);opacity:.5}}
+.card{transition:transform .2s,box-shadow .2s,border-color .2s}.card:hover{transform:translateY(-2px);border-color:rgba(80,200,255,.6);box-shadow:0 14px 40px rgba(0,0,0,.5),0 0 34px rgba(35,150,255,.25)}
+.kpi strong{font-variant-numeric:tabular-nums}
+nav a.on{animation:navglow 3s ease-in-out infinite}@keyframes navglow{50%{box-shadow:0 0 32px rgba(35,150,255,.6),inset 3px 0 var(--cy)}}
+.qa{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa a{display:grid;gap:4px;padding:14px;border:1px solid var(--edge);border-radius:12px;background:rgba(15,50,110,.35);color:#fff;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;transition:.2s}
+.qa a small{color:var(--mu);font-weight:400;font-size:10px}
+.qa a:hover{background:rgba(30,110,240,.4);box-shadow:0 0 22px rgba(35,140,255,.4);transform:translateY(-2px)}
+.qa a:nth-child(2){border-color:rgba(167,139,255,.5)}.qa a:nth-child(3){border-color:rgba(54,240,168,.5)}.qa a:nth-child(4){border-color:rgba(255,194,97,.5)}
+.donut{display:flex;align-items:center;gap:16px;margin-top:10px}.donut svg{width:96px;height:96px;flex:none;filter:drop-shadow(0 0 8px rgba(53,170,255,.4))}
+.donut .lg{display:grid;gap:6px;font:10px monospace;color:#9db6d0;flex:1}.donut .lg b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+@media(max-width:1100px){.app{grid-template-columns:1fr}aside{position:static;height:auto}.kpis{grid-template-columns:1fr 1fr}.deck{grid-template-columns:1fr}.copy{width:100%}.hero{height:600px}.wm{font-size:44px}}
+
+.gauge{position:relative;width:150px;height:150px;margin:2px auto 8px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg);filter:drop-shadow(0 0 12px rgba(54,240,168,.45))}
+.gtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.gtxt b{font-size:27px;text-shadow:0 0 18px rgba(54,240,168,.6)}.gtxt small{font:8px monospace;letter-spacing:1px;color:var(--mu)}
+.qa{flex:1;align-content:stretch}
+.qa a{align-content:center;justify-items:start;min-height:92px;border-width:1px}
+.qa a i{font-style:normal;font-size:20px;margin-bottom:4px;filter:drop-shadow(0 0 8px currentColor)}
+.qa a.q1{background:linear-gradient(135deg,rgba(25,110,255,.55),rgba(10,40,110,.35));border-color:rgba(80,170,255,.7);color:#bfe3ff}
+.qa a.q2{background:linear-gradient(135deg,rgba(130,80,255,.5),rgba(40,20,100,.35));border-color:rgba(167,139,255,.7);color:#dccbff}
+.qa a.q3{background:linear-gradient(135deg,rgba(20,170,120,.45),rgba(6,50,50,.35));border-color:rgba(54,240,168,.7);color:#b6ffe3}
+.qa a.q4{background:linear-gradient(135deg,rgba(220,150,30,.45),rgba(70,40,5,.35));border-color:rgba(255,194,97,.7);color:#ffe2b0}
+.qa a:hover{box-shadow:0 0 26px currentColor}
+.qa a{color:#fff}.qa a i{color:inherit}.qa a.q1 i{color:#6fb7ff}.qa a.q2 i{color:#c1a8ff}.qa a.q3 i{color:#5ff5b8}.qa a.q4 i{color:#ffc261}
+.simpts{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.simpts span{padding:4px 10px;border-radius:99px;border:1px solid rgba(53,170,255,.3);background:rgba(20,80,160,.2);font:9px monospace;color:#9fd3ff}
+.hb{width:54px;height:20px;margin-left:auto;flex:none}.hb path{fill:none;stroke:var(--gr);stroke-width:1.6;filter:drop-shadow(0 0 4px var(--gr));stroke-dasharray:90;animation:hbm 2.4s linear infinite}
+@keyframes hbm{from{stroke-dashoffset:90}to{stroke-dashoffset:-90}}
+.user{display:flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--edge);border-radius:99px;background:rgba(10,32,64,.7);font-size:12px;white-space:nowrap}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 10px monospace;background:linear-gradient(135deg,#2f8cff,#a78bff);color:#fff;box-shadow:0 0 12px rgba(80,150,255,.6)}
+@media(max-width:560px){.user span:last-child{display:none}.user{padding:4px}}
+@media(max-width:560px){.hud{display:none}.hero{height:660px}.note{display:none}.kpis{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.sec{grid-template-columns:1fr;justify-items:center}}
+
+#v-overview[hidden],#v-audit[hidden],#v-sim[hidden],#v-sec[hidden]{display:none}
+.vh h2{font-size:24px;margin-bottom:4px}.vh p{color:var(--mu);font-size:13px;margin-bottom:16px}
+.vsum{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:13px}.vsum div small{display:block;color:var(--mu);font:9px monospace;letter-spacing:1px}.vsum div b{font-size:22px}
+.tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:13px}
+.tools input,textarea{background:rgba(5,18,40,.8);border:1px solid var(--edge);border-radius:10px;color:var(--tx);padding:10px 13px;font:13px 'Segoe UI',sans-serif;min-width:220px}
+textarea{width:100%;margin-top:12px;resize:vertical;line-height:1.6}
+.chips{display:flex;gap:7px;flex-wrap:wrap}.chips button{background:rgba(20,80,160,.25);border:1px solid var(--edge);color:#cfe3f5;border-radius:99px;padding:6px 13px;font-size:12px;cursor:pointer}
+.chips button.on,.chips button:hover{background:rgba(35,130,255,.5);color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:13px}@media(max-width:900px){.two{grid-template-columns:1fr}}
+details.ar{border-bottom:1px solid rgba(53,170,255,.14);padding:11px 0}details.ar:last-child{border:0}
+details.ar summary{display:grid;grid-template-columns:10px minmax(0,1fr) 60px 74px;gap:12px;align-items:center;cursor:pointer;list-style:none;font-size:13px}
+details.ar summary::-webkit-details-marker{display:none}details.ar summary small{color:var(--mu);display:block;font-size:11px}
+details.ar summary b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev{margin:10px 0 2px 22px;color:#b9d2ea;font-size:12px;line-height:1.7}.ev span{display:inline-block;margin-right:16px;color:var(--mu)}.ev span b{color:#fff}.ev ul{margin:6px 0 0 18px}
+.sr{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:start;padding:13px 0;border-bottom:1px solid rgba(53,170,255,.14)}.sr:last-child{border:0}.sr small{display:block;color:var(--mu);font-size:11px;margin-top:3px}
+.st{font:700 10px monospace;letter-spacing:.8px;padding:4px 9px;border-radius:99px;border:1px solid var(--edge)}.st.ok{color:var(--gr);border-color:rgba(54,240,168,.5)}.st.bad{color:var(--rd);border-color:rgba(255,90,110,.5)}.st.na{color:var(--mu)}
+.rs{display:grid;grid-template-columns:30px minmax(0,1fr) 46px 72px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(53,170,255,.14);font-size:13px}.rs small{display:block;color:var(--mu);font-size:11px}
+.top .crumb{white-space:nowrap}
+nav a[data-v]{cursor:pointer}
+
+#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1}
+.vh{position:relative;padding-bottom:6px}
+.ecg{display:block;width:100%;max-width:520px;height:34px;margin:4px 0 12px;overflow:visible}
+.ecg path{fill:none;stroke:#35e0ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px #35e0ff);stroke-dasharray:140 560;animation:ecg 3.2s linear infinite}
+.ecg path.base{stroke:rgba(53,170,255,.22);stroke-dasharray:none;animation:none;filter:none}
+@keyframes ecg{from{stroke-dashoffset:700}to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.ecg path{animation:none}}
+#eAct{background:rgba(5,18,40,.8);border:1px solid var(--edge);border-radius:10px;color:var(--tx);padding:10px 13px;font:13px "Segoe UI",sans-serif}.tag:empty{display:none}.erow{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:12px;color:#cfe3f5}.erow input[type=range]{min-width:0;width:140px;padding:0;vertical-align:middle;accent-color:#35e0ff}.ck{display:flex;gap:6px;align-items:center;cursor:pointer}.ck input{min-width:0;width:auto;accent-color:#35e0ff}
+.hr{display:grid;grid-template-columns:minmax(0,1fr) 44px 72px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(53,170,255,.14);font-size:12px}.hr small{display:block;color:var(--mu);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sk{width:100%;height:118px;border-radius:12px;border:1px solid rgba(53,170,255,.28);background:linear-gradient(180deg,rgba(8,30,64,.6),rgba(3,10,24,.9));display:block}.auth-btn{padding:8px 13px;border:1px solid rgba(53,170,255,.45);border-radius:9px;background:rgba(10,45,85,.7);color:#dff6ff;font:700 11px monospace;cursor:pointer}
+.auth-btn:hover{border-color:#35e0ff;box-shadow:0 0 16px rgba(53,170,255,.2)}
+.auth-backdrop{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(1,7,19,.82);backdrop-filter:blur(12px)}
+.auth-backdrop[hidden]{display:none}
+.auth-panel{width:min(420px,100%);padding:28px;border:1px solid rgba(53,170,255,.4);border-radius:16px;background:linear-gradient(145deg,#0b2040,#050d1e);box-shadow:0 0 55px rgba(25,130,255,.2)}
+.auth-panel h2{margin:0 0 8px;color:#e8f7ff;font-size:21px}
+.auth-panel p{margin:0 0 22px;color:#8fb4d4;font-size:12px;line-height:1.6}
+.auth-field{display:block;margin:14px 0;color:#9fc8e8;font:10px monospace;letter-spacing:1px}
+.auth-field input{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border:1px solid rgba(53,170,255,.3);border-radius:9px;background:#06142a;color:#fff;font:14px 'Segoe UI',sans-serif}
+.auth-field input:focus{outline:1px solid #35e0ff}
+.auth-actions{display:flex;gap:10px;margin-top:20px}
+.auth-actions button{flex:1;margin:0}
+.auth-error{min-height:18px;margin-top:12px;color:#ff8494;font-size:12px}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 6h4a3 3 0 0 1 3 3v6"/></symbol>
+<symbol id="i-fp" viewBox="0 0 24 24"><path d="M12 4a7 7 0 0 0-7 7v3"/><path d="M12 8a3 3 0 0 0-3 3v6"/><path d="M12 12v6"/><path d="M16 12v2a8 8 0 0 1-2 5"/><path d="M19 9a7 7 0 0 0-3-4"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5L16 9.5"/></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></symbol>
+<symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></symbol>
+</defs></svg>
+<style>svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.15em}nav a svg.i{width:17px;height:17px;flex:0 0 auto}.kpi .ic svg.i{width:24px;height:24px}.qa i svg.i{width:20px;height:20px}.kpi .ic svg.i{position:static;width:24px;height:24px;opacity:1}nav a{white-space:nowrap}.copy p{max-width:420px}.qa i svg.i{opacity:1}.mark svg.i{width:22px;height:22px;color:#7fe0ff}
+</style>
+<div class="app">
+<aside>
+  <div class="brand"><div class="mark"><svg class="i"><use href="#i-shield"/></svg></div><div><b>AEGIS<i>-X</i></b><small>AGENT CONTROL PLANE</small></div></div>
+  <div class="ws"><span class="dot"></span>LOCAL ENVIRONMENT<em>DEV</em></div>
+  <nav>
+    <a data-v="overview" class="on"><svg class="i"><use href="#i-grid"/></svg> Overview</a><a data-v="sim"><svg class="i"><use href="#i-flow"/></svg> Plan simulation</a><a data-v="audit"><svg class="i"><use href="#i-fp"/></svg> Audit &amp; evidence<span id="navCount">â€“</span></a><a data-v="sec"><svg class="i"><use href="#i-bell"/></svg> Security centre<span id="navSec">â€“</span></a>
+  </nav>
+  <div class="side-b">
+    <div class="stat"><span class="dot" id="sdot"></span><div><b id="sapi">Checking APIâ€¦</b><small id="sver">Backend</small></div><svg class="hb" viewBox="0 0 60 20"><path d="M0 10 L14 10 18 3 24 17 29 10 60 10"/></svg></div>
+    <div class="badge">CONTROL / VERIFY / TRUST</div>
+    <canvas id="sk" class="sk"></canvas>
+  </div>
+</aside>
+<main>
+  <div class="top"><div class="crumb">AEGIS-X &nbsp;â€º&nbsp; <b id="crumb">Overview</b></div><div class="sp"></div><span class="note">API activity monitoring active</span><div class="user" id="accountPill"><span class="av" id="accountAvatar">AX</span><span id="accountName">Not signed in</span></div><button class="auth-btn" id="authOpen">Sign in</button><button class="auth-btn" id="authLogout" hidden>Sign out</button><div class="pill" id="sys"><span class="dot"></span>SYSTEM ONLINE</div></div>
+
+  <div id="v-overview">
+  <section class="kpis">
+    <div class="card kpi"><div class="ic" style="color:var(--cy)"><svg class="i"><use href="#i-server"/></svg></div><small>Backend service</small><strong id="kHealth" style="color:var(--cy)">â€“</strong><em id="kVer">VERSION</em>
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 30 L15 24 30 28 45 14 60 20 75 8 100 12" fill="none" stroke="#35e0ff" stroke-width="2"/></svg></div>
+    <div class="card kpi"><div class="ic" style="color:var(--gr)"><svg class="i"><use href="#i-fp"/></svg></div><small>Verified audit records</small><strong id="kRec" style="color:var(--gr)">â€“</strong><em>CHECKED IN HASH CHAIN</em>
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 32 L20 26 35 30 55 16 75 18 100 6" fill="none" stroke="#36f0a8" stroke-width="2"/></svg></div>
+    <div class="card kpi"><div class="ic" style="color:var(--vi)"><svg class="i"><use href="#i-shield"/></svg></div><small>Audit integrity</small><strong id="kInt" style="color:var(--vi)">â€“</strong><em id="kErr">CHAIN STATUS</em>
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 20 L25 22 50 14 75 18 100 10" fill="none" stroke="#a78bff" stroke-width="2"/></svg></div>
+    <div class="card kpi"><div class="ic" style="color:var(--am)"><svg class="i"><use href="#i-gauge"/></svg></div><small>Latest decision</small><strong id="kDec" style="color:var(--am)">â€“</strong><em>LATEST AUDIT RECORD</em>
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M0 28 L20 18 40 24 60 10 80 16 100 6" fill="none" stroke="#ffc261" stroke-width="2"/></svg></div>
+  </section>
+
+  <section class="hero">
+    <canvas id="cv"></canvas>
+    <div class="copy">
+      <div class="wm">AEGIS-X</div>
+      <div class="sub">â— AUTONOMOUS AI GOVERNANCE PLATFORM</div>
+      <h2>Every critical action.<br><em>One control layer.</em></h2>
+      <p>A pre-execution intelligence layer that evaluates evidence, enforces deterministic policy and creates verifiable records before autonomous actions proceed.</p>
+      <button class="btn" onclick="document.getElementById('deck').scrollIntoView({behavior:'smooth'})">View system overview â†’</button>
+    </div>
+    <div class="hud" style="top:16px;right:18px"><small>SYSTEM STATUS</small><b id="hStat">Operational</b></div>
+    <div class="hud" style="bottom:16px;left:50%"><small>VERIFIED RECORDS</small><b id="hRec">â€“</b></div>
+    <div class="hud" style="bottom:16px;right:18px"><small>AUDIT INTEGRITY</small><b id="hInt">â€“</b></div>
+  </section>
+
+  <section class="deck" id="deck">
+    <article class="card"><h3>Security posture <span class="tag" id="secTag">All systems secure</span></h3>
+      <div class="gauge"><svg viewBox="0 0 120 120" id="gauge"></svg><div class="gtxt"><b id="gPct">â€“</b><small>CHECKS PASSING</small></div></div>
+      <div class="chk" id="chk"></div></article>
+    <article class="card"><h3>Recent activity <a data-go="audit" style="cursor:pointer">View all â†’</a></h3><div id="act"></div></article>
+    <article class="card"><h3>Quick actions</h3><div class="qa">
+      <a data-go="sim" class="q1"><i><svg class="i"><use href="#i-play"/></svg></i>Run simulation<small>Test AI decisions</small></a>
+      <a data-go="audit" class="q2"><i><svg class="i"><use href="#i-fp"/></svg></i>View audit logs<small>Inspect evidence</small></a>
+      <a onclick="load()" class="q3"><i><svg class="i"><use href="#i-shield"/></svg></i>Security check<small>Re-verify chain</small></a>
+      <a data-go="sec" class="q4"><i><svg class="i"><use href="#i-cog"/></svg></i>Security centre<small>Real status</small></a></div></article>
+    <article class="card"><h3>Simulation control</h3>
+      <p style="color:var(--mu);font-size:12px;line-height:1.55">Plan a scenario and test how AEGIS-X governs it before anything executes.</p>
+      <div class="simpts"><span>Deterministic policy</span><span>No execution</span><span>Audit-backed</span></div>
+      <button class="btn" data-go="sim" style="margin-top:14px"><svg class="i"><use href="#i-play"/></svg> Run simulation â†’</button></article>
+    <article class="card"><h3>Audit trail <a data-go="audit" style="cursor:pointer">Open audit â†’</a></h3><div class="count"><span id="aCount">â€“</span><small>verified records</small></div>
+      <div class="donut"><svg viewBox="0 0 42 42" id="dn"></svg><div class="lg" id="lg"></div></div></article>
+    <article class="card"><h3>Risk trend <span class="tag">Recent records</span></h3>
+      <svg id="trend" viewBox="0 0 600 120" preserveAspectRatio="none" style="width:100%;height:96px;filter:drop-shadow(0 0 8px rgba(53,224,255,.45))"></svg>
+      <div class="stats"><div><small>LATEST</small><b id="tL">â€“</b></div><div><small>AVERAGE</small><b id="tA">â€“</b></div><div><small>PEAK</small><b id="tP">â€“</b></div><div><small>PLOTTED</small><b id="tN">â€“</b></div></div></article>
+  </section>
+  </div>
+  <div id="v-audit" hidden>
+    <div class="vh"><h2>Audit &amp; evidence</h2><svg class="ecg" viewBox="0 0 520 34" preserveAspectRatio="none"><path class="base" d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/><path d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/></svg><p>Every governed decision, hash-chained. Click a row to see the evidence.</p></div>
+    <div class="card vsum" id="aSum"></div>
+    <div class="tools"><input id="aq" placeholder="Search actionsâ€¦"><div class="chips" id="aflt"><button class="on" data-f="ALL">All</button><button data-f="ALLOW">Allow</button><button data-f="REVIEW">Review</button><button data-f="BLOCK">Block</button></div><span class="note" id="aCnt"></span><button class="btn" id="aCsv" style="margin-left:auto;padding:8px 16px;font-size:12px">Export CSV</button></div>
+    <div class="card" style="padding:6px 16px"><div id="aList"></div></div>
+  </div>
+  <div id="v-sim" hidden>
+    <div class="vh"><h2>Plan simulation</h2><svg class="ecg" viewBox="0 0 520 34" preserveAspectRatio="none"><path class="base" d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/><path d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/></svg><p>Test how AEGIS-X governs a plan before anything executes. One action per line, up to 10.</p></div>
+    <div class="two">
+      <div class="card"><h3>Plan</h3>
+        <div class="chips" id="presets"><button data-p="0">Production deploy</button><button data-p="1">Customer data cleanup</button><button data-p="2">Read-only report</button></div>
+        <textarea id="plan" rows="8" placeholder="Build and validate the release&#10;Deploy the application to production&#10;Verify production service health"></textarea>
+        <button class="btn" id="runSim" style="margin-top:12px"><svg class="i"><use href="#i-play"/></svg> Run simulation</button><span class="note" id="simMsg" style="margin-left:12px"></span></div>
+      <div class="card"><h3>Result</h3><div id="simOut"><p style="color:var(--mu);font-size:12px">Run a plan to see the backend's decision and risk for every step.</p></div></div>
+    </div>
+    <div class="two" style="margin-top:13px">
+      <div class="card"><h3>Live action evaluation <span class="tag">POST /evaluate</span></h3>
+        <input id="eAct" placeholder="Describe one action, e.g. Delete customer records" style="width:100%;margin-top:12px">
+        <div class="erow"><label>Evidence score <b id="eEvV">80</b><input id="eEv" type="range" min="0" max="100" value="80"></label>
+        <label class="ck"><input id="ePol" type="checkbox"> Policy violation</label><label class="ck"><input id="eCon" type="checkbox"> Contradiction detected</label></div>
+        <button class="btn" id="runEval" style="margin-top:12px">Evaluate action</button><span class="note" id="evMsg" style="margin-left:12px"></span>
+        <div id="evOut" style="margin-top:12px"></div></div>
+      <div class="card"><h3>Simulation history <span class="tag" id="shCnt"></span></h3><div id="shList"><p style="color:var(--mu);font-size:12px;margin-top:10px">Loadingâ€¦</p></div></div>
+    </div>
+  </div>
+  <div id="v-sec" hidden>
+    <div class="vh"><h2>Security centre</h2><svg class="ecg" viewBox="0 0 520 34" preserveAspectRatio="none"><path class="base" d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/><path d="M0 17H150L162 17 170 4 182 30 192 17H300L312 17 320 8 330 26 338 17H520"/></svg><p>Only checks that were actually performed are shown as passing.</p></div>
+    <div class="card"><div id="secList"></div></div>
+  </div>
+  <div class="foot" id="foot"></div>
+</main>
+</div>
+
+<div class="auth-backdrop" id="authModal" hidden>
+  <section class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <h2 id="authTitle">AEGIS-X ACCESS</h2>
+    <p>Sign in with your existing AEGIS-X account to access protected audit evidence and control operations.</p>
+    <form id="authForm">
+      <label class="auth-field">USERNAME
+        <input id="authUsername" name="username" autocomplete="username" required minlength="3" maxlength="80">
+      </label>
+      <label class="auth-field">PASSWORD
+        <input id="authPassword" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <div class="auth-actions">
+        <button class="btn" type="submit">Sign in securely</button>
+        <button class="auth-btn" type="button" id="authClose">Cancel</button>
+      </div>
+      <div class="auth-error" id="authError" role="alert"></div>
+    </form>
+  </section>
+</div>
+<script>
+const API=location.protocol==='file:'?['http://127.0.0.1:8000']:['/api','http://127.0.0.1:8000'];
+const SAMPLE={health:{status:'healthy',version:'0.2.0'},verify:{valid:true,checked_records:243,errors:[]},
+ audit:[{action:'Deploy to production',decision:'ALLOW',risk_score:18,created_at:'2026-11-20T11:33:00'},{action:'Delete customer records',decision:'BLOCK',risk_score:92,created_at:'2026-11-20T11:20:00'},{action:'Send marketing email',decision:'REVIEW',risk_score:55,created_at:'2026-11-20T10:58:00'},{action:'Read analytics report',decision:'ALLOW',risk_score:8,created_at:'2026-11-20T10:40:00'},{action:'Update firewall rule',decision:'REVIEW',risk_score:61,created_at:'2026-11-20T10:12:00'},{action:'Export user list',decision:'BLOCK',risk_score:88,created_at:'2026-11-20T09:50:00'},{action:'Restart worker',decision:'ALLOW',risk_score:22,created_at:'2026-11-20T09:31:00'}]};
+const ST={rec:[],h:{},v:{},live:false,f:'ALL',q:''};
+const TOKEN_KEY='aegis_access_token';
+function getToken(){return sessionStorage.getItem(TOKEN_KEY)}
+async function get(p){
+  let lastError;
+  for(const b of API){
+    try{
+      const headers={};
+      const token=getToken();
+      if(token)headers.Authorization='Bearer '+token;
+      const r=await fetch(b+p,{headers,signal:AbortSignal.timeout(5000)});
+      if(r.status===401)throw new Error('AUTH_REQUIRED');
+      if(r.status===403)throw new Error('FORBIDDEN');
+      if(r.ok)return await r.json();
+      throw new Error('HTTP '+r.status);
+    }catch(e){
+      if(e.message==='AUTH_REQUIRED'||e.message==='FORBIDDEN')throw e;
+      lastError=e;
+    }
+  }
+  throw lastError||new Error('Backend not reachable');
+}
+const $=id=>document.getElementById(id);
+const fmt=d=>{try{return new Date(d).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return 'â€”'}};
+async function load(){
+  let live=true,h,v,a,authRequired=false,accessDenied=false;
+  try{
+    [h,v,a]=await Promise.all([get('/health'),get('/audit/verify'),get('/audit?limit=50')]);
+  }catch(e){
+    live=false;
+    authRequired=e.message==='AUTH_REQUIRED';
+    accessDenied=e.message==='FORBIDDEN';
+    if(authRequired){
+      $('authModal').hidden=false;
+      $('authError').textContent='Sign in to access protected AEGIS-X data.';
+    }
+    h={status:'unavailable',version:'?'};
+    v={valid:false,checked_records:0,errors:[]};
+    a=[];
+  }
+  if(authRequired||accessDenied){
+    ST.rec=[];ST.h=h;ST.v=v;ST.live=false;
+    renderViews();
+    $('kHealth').textContent=authRequired?'Sign in required':'Access restricted';
+    $('kVer').textContent=authRequired?'AUTH REQUIRED':'ROLE RESTRICTED';
+    $('kRec').textContent='—';$('kInt').textContent='Locked';
+    $('kErr').textContent=authRequired?'SIGN IN TO VERIFY':'INSUFFICIENT PERMISSIONS';
+    $('kDec').textContent='—';
+    $('navCount').textContent='—';$('aCount').textContent='—';
+    $('hRec').textContent='—';$('hInt').textContent='Locked';
+    $('sapi').textContent=authRequired?'Sign in required':'Access restricted';
+    $('sver').textContent='Protected data unavailable';
+    $('sdot').className='dot off';$('sys').className='pill off';
+    $('sys').lastChild.textContent=authRequired?'SIGN IN REQUIRED':'ACCESS RESTRICTED';
+    $('hStat').textContent=authRequired?'Sign in required':'Access restricted';
+    $('act').innerHTML='<p style="color:var(--mu);font-size:12px">Protected audit records are not available.</p>';
+    $('foot').textContent=authRequired?'Sign in to load verified audit evidence. No sample records are being displayed.':'Your account role does not permit access to this data.';
+    return;
+  }
+  const rec=Array.isArray(a)?a:(a.records||a.items||[]);
+  ST.rec=rec;ST.h=h;ST.v=v;ST.live=live;renderViews();
+  const ok=h.status==='healthy', valid=v.valid;
+  $('kHealth').textContent=ok?'Healthy':'Offline';$('kVer').textContent='VERSION '+(h.version||'');
+  $('kRec').textContent=v.checked_records;$('kInt').textContent=valid?'Verified':'Failed';
+  $('kErr').textContent=valid?'NO CHAIN ERRORS REPORTED':'CHAIN ERRORS FOUND';
+  const last=rec[0];$('kDec').textContent=last?String(last.decision).toUpperCase():'â€”';
+  $('navCount').textContent=v.checked_records;$('aCount').textContent=v.checked_records;
+  $('hRec').textContent=v.checked_records;$('hInt').textContent=valid?'Verified':'Failed';
+  $('sapi').textContent=ok?'API connected':'API unavailable';$('sver').textContent='Backend v'+(h.version||'?');
+  $('sdot').className='dot'+(ok?'':' off');$('sys').className='pill'+(ok?'':' off');$('sys').lastChild.textContent=ok?'SYSTEM ONLINE':'SYSTEM OFFLINE';
+  $('hStat').textContent=ok?'Operational':'Unavailable';
+  if(!live){$('sapi').textContent='Sample data';$('sver').textContent='Backend not reached';$('sdot').className='dot off';$('sys').className='pill off';$('sys').lastChild.textContent='SAMPLE DATA';$('hStat').textContent='Sample'}
+  $('act').innerHTML=rec.slice(0,5).map(r=>{const d=String(r.decision).toUpperCase();return `<div class="row"><span class="d ${d}"></span><div><b>${r.action||'â€”'}</b><small>${fmt(r.created_at)}</small></div><span class="chip ${d}">${d}</span></div>`}).join('')||'<p style="color:var(--mu);font-size:12px">No audit records yet.</p>';
+  const blocked=rec.filter(r=>String(r.decision).toUpperCase()==='BLOCK').length,viol=rec.filter(r=>r.policy_violation).length;
+  const checks=[ok,valid],pass=checks.filter(Boolean).length,pct=Math.round(pass/checks.length*100),C=2*Math.PI*48;
+  $('gPct').textContent=pct+'%';
+  $('gauge').innerHTML=`<defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35e0ff"/><stop offset="1" stop-color="#36f0a8"/></linearGradient></defs><circle cx="60" cy="60" r="48" fill="none" stroke="rgba(53,170,255,.16)" stroke-width="9"/><circle cx="60" cy="60" r="48" fill="none" stroke="${pct===100?'url(#gg)':'#ffc261'}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/>`;
+  $('chk').innerHTML=[['Backend service',ok?'Healthy':'Offline',ok],['Audit chain',valid?'Verified':'Failed',valid],['Blocked in recent records',blocked+' of '+rec.length,true],['Policy violations flagged',viol,viol===0]].map(([k,x,g])=>`<div><span>${k}</span><b class="${g?'ok':''}" style="${g?'':'color:#ff7a8c'}">${x}</b></div>`).join('');
+  $('secTag').textContent=ok&&valid?'All systems secure':'Attention needed';
+  const mix={};rec.forEach(r=>{const k=String(r.decision).toUpperCase();mix[k]=(mix[k]||0)+1});const mx=Math.max(1,...Object.values(mix));
+  const col={ALLOW:'#36f0a8',REVIEW:'#ffc261',BLOCK:'#ff5a72'};
+  const tot=Object.values(mix).reduce((s,x)=>s+x,0)||1;let off=25;
+  $('dn').innerHTML='<circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(53,170,255,.14)" stroke-width="5"/>'+Object.entries(mix).map(([k,n])=>{const d=n/tot*100;const s=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="${col[k]||'#5d7896'}" stroke-width="5" stroke-dasharray="${d} ${100-d}" stroke-dashoffset="${off}"/>`;off-=d;return s}).join('')+`<text x="21" y="24" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">${tot}</text>`;
+  $('lg').innerHTML=Object.entries(mix).map(([k,n])=>`<div><b style="background:${col[k]||'#5d7896'}"></b>${k} ${n} (${Math.round(n/tot*100)}%)</div>`).join('');
+  document.querySelectorAll('[data-count]').forEach(el=>{});
+  const pts=rec.map(r=>Number(r.risk_score)).filter(Number.isFinite).slice(0,40).reverse();
+  if(pts.length>1){const W=600,H=120,m=Math.max(100,...pts),st=W/(pts.length-1);const c=pts.map((p,i)=>[i*st,H-p/m*(H-10)-5]);const ln=c.map(([x,y],i)=>(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)).join(' ');
+    $('trend').innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#35e0ff" stop-opacity=".45"/><stop offset="1" stop-color="#35e0ff" stop-opacity="0"/></linearGradient></defs><path d="${ln} L${W} ${H} L0 ${H}Z" fill="url(#g)"/><path d="${ln}" fill="none" stroke="#35e0ff" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    $('tL').textContent=pts[pts.length-1];$('tA').textContent=(pts.reduce((s,x)=>s+x,0)/pts.length).toFixed(1);$('tP').textContent=Math.max(...pts);$('tN').textContent=pts.length}
+  $('foot').textContent=live?'Live data from your AEGIS-X backend':'Backend not reachable. No sample records are being presented as live evidence.';
+}
+load();setInterval(load,15000);
+(function(){const seen={};const orig=Object.getOwnPropertyDescriptor(Node.prototype,'textContent');
+ ['kRec','aCount','hRec','navCount'].forEach(id=>{const el=$(id);new MutationObserver(()=>{if(el._a)return;const n=Number(el.textContent);if(!Number.isFinite(n)||seen[id]===n)return;seen[id]=n;el._a=1;let s=0;const st=performance.now();(function f(now){const k=Math.min(1,(now-st)/900);s=Math.round(n*(1-Math.pow(1-k,3)));el.textContent=s;if(k<1)requestAnimationFrame(f);else setTimeout(()=>{el._a=0},50)})(st)}).observe(el,{childList:true,characterData:true,subtree:true})})})();
+
+/* Hero: shield + globe + rings (canvas) */
+const cv=$('cv'),cx=cv.getContext('2d');let t=0;
+function fit(){const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',fit);fit();
+const stars=Array.from({length:120},()=>[Math.random(),Math.random(),Math.random()*1.4+.3]);
+function shield(x,y,s){cx.beginPath();cx.moveTo(x,y-s*1.1);cx.lineTo(x+s*.78,y-s);cx.quadraticCurveTo(x+s*.85,y-s*.9,x+s*.84,y-s*.7);cx.lineTo(x+s*.72,y+s*.1);cx.quadraticCurveTo(x+s*.55,y+s*.65,x,y+s*1.15);cx.quadraticCurveTo(x-s*.55,y+s*.65,x-s*.72,y+s*.1);cx.lineTo(x-s*.84,y-s*.7);cx.quadraticCurveTo(x-s*.85,y-s*.9,x-s*.78,y-s);cx.closePath()}
+function draw(){
+  const W=cv.clientWidth,H=cv.clientHeight;cx.clearRect(0,0,W,H);t+=.01;
+  stars.forEach(([a,b,r])=>{cx.fillStyle=`rgba(150,220,255,${.3+.4*Math.sin(t*2+a*20)})`;cx.fillRect(a*W,b*H,r,r)});
+  const wide=matchMedia('(min-width:1101px)').matches,sx=wide?W*.53:W*.5,sy=H*(wide?.5:.7),s=wide?Math.min(H*.29,W*.16):Math.min(H*.17,W*.12);
+  const gx=wide?W*.865:W*.84,gy=H*(wide?.54:.7),gr=wide?Math.min(H*.27,W*.105):Math.min(H*.15,W*.09);
+  // soft ambient light (no hard glow)
+  let g=cx.createRadialGradient(sx,sy,10,sx,sy,s*2.4);g.addColorStop(0,'rgba(30,110,220,.32)');g.addColorStop(1,'rgba(30,110,220,0)');cx.fillStyle=g;cx.fillRect(sx-s*2.6,sy-s*2.6,s*5.2,s*5.2);
+  // pedestal: stacked discs with pulsing rim light
+  const py=sy+s*1.28;
+  [[1.45,.30,'#06162f','rgba(90,190,255,.55)'],[1.22,.25,'#0a2347','rgba(120,215,255,.75)'],[.95,.19,'#0d2d5a','rgba(160,235,255,.9)']].forEach(([k,e,f,c],i)=>{const yy=py+(2-i)*s*.07;cx.beginPath();cx.ellipse(sx,yy,s*k,s*k*e,0,0,7);cx.fillStyle=f;cx.fill();cx.lineWidth=1.4;cx.strokeStyle=c;cx.shadowColor='#35c8ff';cx.shadowBlur=10;cx.stroke();cx.shadowBlur=0});
+  const pu=(t*.8)%1;cx.strokeStyle=`rgba(120,225,255,${.55*(1-pu)})`;cx.lineWidth=1.2;cx.beginPath();cx.ellipse(sx,py,s*(.9+pu*1.1),s*(.17+pu*.2),0,0,7);cx.stroke();
+  // orbit rings behind (thin, restrained)
+  [[1.5,.34,'rgba(120,225,255,.42)'],[1.75,.48,'rgba(170,160,255,.34)']].forEach(([k,e,c],i)=>{cx.strokeStyle=c;cx.lineWidth=1;cx.beginPath();cx.ellipse(sx,sy,s*k,s*k*e,-.35+Math.sin(t*(.5+i*.25))*.1,0,7);cx.stroke()});
+  // shield body: brushed-steel gradient
+  const gd=cx.createLinearGradient(sx-s,sy-s,sx+s*.8,sy+s*1.1);gd.addColorStop(0,'#8fb6de');gd.addColorStop(.4,'#2c5f9e');gd.addColorStop(1,'#08213f');
+  shield(sx,sy,s);cx.fillStyle=gd;cx.shadowColor='rgba(40,130,255,.55)';cx.shadowBlur=18;cx.fill();cx.shadowBlur=0;
+  cx.lineWidth=1.6;cx.strokeStyle='rgba(185,225,250,.8)';cx.stroke();
+  // facet highlight on left half
+  cx.save();shield(sx,sy,s);cx.clip();const fh=cx.createLinearGradient(sx-s,sy,sx,sy);fh.addColorStop(0,'rgba(190,225,255,.22)');fh.addColorStop(1,'rgba(190,225,255,0)');cx.fillStyle=fh;cx.fillRect(sx-s,sy-s*1.2,s,s*2.4);
+  cx.strokeStyle='rgba(200,235,255,.16)';cx.lineWidth=1;cx.beginPath();cx.moveTo(sx,sy-s*1.1);cx.lineTo(sx,sy+s*1.15);cx.stroke();cx.restore();
+  // inner panel
+  shield(sx,sy,s*.82);cx.fillStyle='rgba(5,28,64,.62)';cx.fill();cx.lineWidth=1;cx.strokeStyle='rgba(120,200,255,.5)';cx.stroke();
+  // crest: ring + monogram
+  cx.save();cx.translate(sx,sy-s*.04);cx.beginPath();cx.arc(0,0,s*.4,0,7);cx.fillStyle='rgba(4,24,56,.85)';cx.fill();cx.lineWidth=1.6;cx.strokeStyle='rgba(210,240,255,.85)';cx.stroke();
+  cx.beginPath();cx.arc(0,0,s*.46,0,7);cx.lineWidth=.8;cx.strokeStyle='rgba(120,210,255,.35)';cx.stroke();
+  cx.beginPath();cx.moveTo(-s*.22,s*.18);cx.lineTo(-s*.035,-s*.26);cx.lineTo(s*.035,-s*.26);cx.lineTo(s*.22,s*.18);cx.lineTo(s*.13,s*.18);cx.lineTo(s*.08,s*.06);cx.lineTo(-s*.08,s*.06);cx.lineTo(-s*.13,s*.18);cx.closePath();cx.fillStyle='#e8f6ff';cx.fill();cx.restore();
+  // thin front ring
+  cx.strokeStyle='rgba(215,245,255,.7)';cx.lineWidth=1.2;cx.beginPath();cx.ellipse(sx,sy,s*1.38,s*.4,.28+Math.sin(t)*.06,.15*Math.PI,.85*Math.PI);cx.stroke();
+  // globe: deep ocean sphere, fine graticule, thin atmosphere
+  g=cx.createRadialGradient(gx,gy,gr*.95,gx,gy,gr*1.55);g.addColorStop(0,'rgba(40,140,255,.28)');g.addColorStop(1,'rgba(40,140,255,0)');cx.fillStyle=g;cx.fillRect(gx-gr*1.7,gy-gr*1.7,gr*3.4,gr*3.4);
+  g=cx.createRadialGradient(gx-gr*.4,gy-gr*.45,gr*.05,gx,gy,gr);g.addColorStop(0,'#4f8fcf');g.addColorStop(.5,'#123f7d');g.addColorStop(1,'#041532');
+  cx.beginPath();cx.arc(gx,gy,gr,0,7);cx.fillStyle=g;cx.fill();cx.lineWidth=1.2;cx.strokeStyle='rgba(130,210,255,.55)';cx.stroke();
+  cx.save();cx.beginPath();cx.arc(gx,gy,gr,0,7);cx.clip();cx.strokeStyle='rgba(150,225,255,.2)';cx.lineWidth=.7;
+  for(let i=-3;i<=3;i++){cx.beginPath();cx.ellipse(gx,gy,gr*Math.abs(Math.cos(i*.45+t*.3)),gr,0,0,7);cx.stroke()}
+  for(let i=-3;i<=3;i++){cx.beginPath();cx.ellipse(gx,gy+i*gr*.28,gr*Math.sqrt(1-(i*.28)**2),gr*.1,0,0,7);cx.stroke()}
+  const sh=cx.createLinearGradient(gx-gr,gy-gr,gx+gr,gy+gr);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,6,20,.55)');cx.fillStyle=sh;cx.fillRect(gx-gr,gy-gr,gr*2,gr*2);
+  cx.restore();
+  // Earth: dotted continents + governed regions (hubs) linked by arcs
+  if(!window._land){const POLY=[[[-168,66],[-120,72],[-80,73],[-60,55],[-52,47],[-70,42],[-80,32],[-81,25],[-97,22],[-92,16],[-83,9],[-78,8],[-85,14],[-105,20],[-117,32],[-124,42],[-125,50],[-140,60],[-152,58],[-166,60]],[[-55,60],[-20,70],[-20,82],[-60,82],[-70,76]],[[-78,8],[-60,10],[-50,0],[-35,-6],[-40,-22],[-55,-35],[-66,-45],[-72,-54],[-75,-40],[-71,-18],[-81,-6],[-80,2]],[[-10,36],[-9,43],[-2,48],[5,52],[8,58],[20,70],[30,70],[40,60],[40,45],[28,41],[22,36],[12,38],[3,38]],[[-17,21],[-10,35],[10,37],[32,31],[43,12],[51,12],[40,-5],[40,-16],[33,-27],[20,-35],[14,-22],[9,-1],[8,4],[-8,4],[-17,14]],[[40,45],[40,60],[60,72],[100,77],[140,72],[170,68],[160,55],[140,45],[122,30],[120,22],[108,10],[100,2],[98,16],[80,8],[72,20],[60,25],[50,30],[36,36],[30,45]],[[114,-22],[130,-12],[142,-11],[153,-27],[146,-39],[135,-34],[115,-34]]];
+    const inside=(x,y,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[xi,yi]=P[i],[xj,yj]=P[j];if(((yi>y)!==(yj>y))&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c};
+    window._land=[];for(let la=-60;la<=80;la+=4)for(let lo=-180;lo<180;lo+=4/Math.max(.35,Math.cos(la*Math.PI/180)))if(POLY.some(P=>inside(lo,la,P)))window._land.push([lo*Math.PI/180,la*Math.PI/180]);
+    window._hubs=[['San Francisco',-122.4,37.8],['New York',-74,40.7],['SÃ£o Paulo',-46.6,-23.5],['London',-0.1,51.5],['Frankfurt',8.7,50.1],['Coimbatore',76.96,11.0],['Singapore',103.8,1.35],['Tokyo',139.7,35.7],['Sydney',151.2,-33.9],['Johannesburg',28,-26.2]].map(([n,lo,la])=>[n,lo*Math.PI/180,la*Math.PI/180]);
+    window._links=[[0,1],[1,3],[3,4],[4,5],[5,6],[6,7],[6,8],[1,2],[4,9],[0,7],[5,9]]}
+  const rot=-1.0+t*.12,P3=(lo,la)=>{const a=lo+rot,x3=Math.cos(la)*Math.sin(a),y3=Math.sin(la),z3=Math.cos(la)*Math.cos(a);return{x:gx+x3*gr,y:gy-y3*gr,z:z3}};
+  cx.save();cx.beginPath();cx.arc(gx,gy,gr,0,7);cx.clip();
+  window._land.forEach(([lo,la])=>{const q=P3(lo,la);if(q.z>0){cx.fillStyle=`rgba(120,220,255,${.25+.65*q.z})`;cx.fillRect(q.x-1,q.y-1,2.1,2.1)}});
+  const H3=window._hubs.map(([n,lo,la])=>({n,...P3(lo,la)}));
+  window._links.forEach(([i,j])=>{const A=H3[i],B=H3[j];if(A.z>0&&B.z>0){cx.strokeStyle='rgba(120,235,255,.55)';cx.lineWidth=.9;cx.beginPath();cx.moveTo(A.x,A.y);cx.quadraticCurveTo((A.x+B.x)/2+(gx-(A.x+B.x)/2)*-.0,(A.y+B.y)/2-gr*.14,B.x,B.y);cx.stroke()}});
+  H3.forEach((h,i)=>{if(h.z<=0)return;const home=h.n==='Coimbatore',pul=(Math.sin(t*3+i)+1)/2;cx.fillStyle=home?'#ffd27a':'#bff6ff';cx.shadowColor=home?'#ffb83a':'#35e0ff';cx.shadowBlur=10;cx.beginPath();cx.arc(h.x,h.y,(home?3.2:2.3)*h.z+.8,0,7);cx.fill();cx.shadowBlur=0;cx.strokeStyle=`rgba(${home?'255,200,110':'120,235,255'},${.5*(1-pul)})`;cx.lineWidth=1;cx.beginPath();cx.arc(h.x,h.y,4+pul*9,0,7);cx.stroke()});
+  cx.restore();
+  if(wide){cx.fillStyle='rgba(150,215,255,.8)';cx.font='9px monospace';cx.textAlign='center';cx.fillText('GLOBAL CONTROL LAYER',gx,gy-gr-12);cx.textAlign='start'}
+  // energy arc shield -> globe with travelling pulse
+  const ax=sx+s*.95,ay=sy-s*.2,bx=gx-gr*.97,by=gy-gr*.15,cxp=(ax+bx)/2,cyp=Math.min(ay,by)-s*.9;
+  cx.strokeStyle='rgba(120,225,255,.7)';cx.lineWidth=1.3;cx.beginPath();cx.moveTo(ax,ay);cx.quadraticCurveTo(cxp,cyp,bx,by);cx.stroke();
+  const q=(t*.35)%1,qx=(1-q)*(1-q)*ax+2*(1-q)*q*cxp+q*q*bx,qy=(1-q)*(1-q)*ay+2*(1-q)*q*cyp+q*q*by;
+  const pg=cx.createRadialGradient(qx,qy,0,qx,qy,12);pg.addColorStop(0,'rgba(170,245,255,.95)');pg.addColorStop(1,'rgba(53,224,255,0)');cx.fillStyle=pg;cx.fillRect(qx-12,qy-12,24,24);
+  cx.strokeStyle='rgba(130,225,255,.3)';cx.lineWidth=.9;cx.beginPath();cx.ellipse(gx,gy,gr*1.3,gr*.36,.5+Math.sin(t*.5)*.08,0,7);cx.stroke();
+  requestAnimationFrame(draw)}
+draw();
+
+/* ===== Views ===== */
+const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function reasons(v){if(Array.isArray(v))return v.map(String);if(typeof v!=='string'||!v)return[];try{const j=JSON.parse(v);return Array.isArray(j)?j.map(String):[String(j)]}catch(e){return[v]}}
+function renderAudit(){
+  const all=ST.rec,d=r=>String(r.decision).toUpperCase();
+  const list=all.filter(r=>(ST.f==='ALL'||d(r)===ST.f)&&(!ST.q||String(r.action).toLowerCase().includes(ST.q)));
+  const valid=ST.v.valid,viol=all.filter(r=>r.policy_violation).length,blk=all.filter(r=>d(r)==='BLOCK').length;
+  $('aSum').innerHTML=`<div><small>VERIFIED RECORDS</small><b>${esc(ST.v.checked_records)}</b></div><div><small>CHAIN INTEGRITY</small><b style="color:${valid?'var(--gr)':'var(--rd)'}">${valid?'Verified':'Failed'}</b></div><div><small>BLOCKED (RECENT)</small><b>${blk}</b></div><div><small>POLICY VIOLATIONS (RECENT)</small><b>${viol}</b></div>`;
+  $('aCnt').textContent=`Showing ${list.length} of ${all.length} recent records`;
+  $('aList').innerHTML=list.map(r=>{const x=d(r),rs=reasons(r.reasons);return `<details class="ar"><summary><span class="d ${x}"></span><div><b>${esc(r.action||'â€”')}</b><small>${fmt(r.created_at)}</small></div><span style="font:12px monospace">risk ${esc(r.risk_score??'â€”')}</span><span class="chip ${x}">${x}</span></summary>
+  <div class="ev"><span>Record <b>#${esc(r.id??'â€”')}</b></span><span>Risk <b>${esc(r.risk_score??'â€”')}</b></span><span>Evidence <b>${esc(r.evidence_score??'â€”')}</b></span><span>Policy violation <b>${r.policy_violation?'Yes':'No'}</b></span><span>Contradiction <b>${r.contradiction_detected?'Yes':'No'}</b></span>${rs.length?'<ul>'+rs.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>':'<div>No reasons recorded.</div>'}</div></details>`}).join('')||'<p style="color:var(--mu);padding:16px 0">No records match.</p>';
+}
+function renderSec(){
+  const h=ST.h,v=ST.v,all=ST.rec,ok=h.status==='healthy';
+  const rows=[
+   ['API health',ok?'ok':'bad',ok?'PASS':'FAIL','Live /health response'+(h.version?' Â· v'+h.version:'')],
+   ['Audit chain integrity',v.valid?'ok':'bad',v.valid?'PASS':'FAIL',`${v.checked_records} records checked${v.valid?', no chain errors':', '+(v.errors||[]).length+' error(s)'}`],
+   ['Blocked decisions (recent)','na',String(all.filter(r=>String(r.decision).toUpperCase()==='BLOCK').length),`Out of ${all.length} most recent records`],
+   ['Policy violations flagged (recent)',all.some(r=>r.policy_violation)?'bad':'ok',String(all.filter(r=>r.policy_violation).length),'From stored audit records']];
+  $('secList').innerHTML=rows.map(([k,c,t,n])=>`<div class="sr"><span class="d ${c==='ok'?'ALLOW':c==='bad'?'BLOCK':''}"></span><div><b>${k}</b><small>${esc(n)}</small></div><span class="st ${c}">${t}</span></div>`).join('')+'<div class="sr"><span class="d"></span><div><b>Authentication &amp; role-based access</b><small>Not checked from this page. See the Security router of your backend.</small></div><span class="st na">NOT CHECKED</span></div>';
+  $('navSec').textContent=all.filter(r=>r.policy_violation).length;
+}
+function renderViews(){renderAudit();renderSec()}
+const TITLES={overview:'Overview',sim:'Plan simulation',audit:'Audit & evidence',sec:'Security centre'};
+function show(v){for(const k in TITLES)$('v-'+k).hidden=k!==v;document.querySelectorAll('nav a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v===v));$('crumb').textContent=TITLES[v];try{history.replaceState(null,'','#'+v)}catch(e){}scrollTo(0,0);if(v==='overview')setTimeout(fit,0)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-v],[data-go]');if(t)show(t.dataset.v||t.dataset.go)});
+$('aq').oninput=e=>{ST.q=e.target.value.toLowerCase();renderAudit()};
+$('aflt').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.f=b.dataset.f;[...$('aflt').children].forEach(x=>x.classList.toggle('on',x===b));renderAudit()};
+const PRE=[['Build and validate the application release','Deploy the application to production','Verify production service health'],['Export customer records','Delete customer records from the production database','Notify affected customers'],['Read the analytics report','Summarise weekly metrics']];
+$('presets').onclick=e=>{const b=e.target.closest('button');if(b)$('plan').value=PRE[b.dataset.p].join('\n')};
+async function post(path,body){
+  let lastError;
+  for(const b of API){
+    try{
+      const headers={'Content-Type':'application/json'};
+      const token=getToken();
+      if(token)headers.Authorization='Bearer '+token;
+      const r=await fetch(b+path,{
+        method:'POST',headers,body:JSON.stringify(body),
+        signal:AbortSignal.timeout(15000)
+      });
+      if(r.status===401)throw new Error('AUTH_REQUIRED');
+      if(r.status===403)throw new Error('FORBIDDEN');
+      if(r.ok)return await r.json();
+      throw new Error('HTTP '+r.status);
+    }catch(e){
+      if(['AUTH_REQUIRED','FORBIDDEN'].includes(e.message)||e.message.startsWith('HTTP'))throw e;
+      lastError=e;
+    }
+  }
+  throw lastError||new Error('Backend not reachable');
+}
+$('runSim').onclick=async()=>{
+  const actions=$('plan').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,10);
+  if(!actions.length){$('simMsg').textContent='Enter at least one action.';return}
+  $('simMsg').textContent='Runningâ€¦';
+  try{const r=await post('/simulate',{actions});$('simMsg').textContent='Done Â· saved to simulation history';
+    const dd=x=>String(x).toUpperCase();
+    $('simOut').innerHTML=`<div class="vsum" style="margin-bottom:6px"><div><small>OVERALL RISK</small><b>${esc(r.overall_risk_score??'â€”')}</b></div><div><small>DECISION</small><b><span class="chip ${dd(r.decision)}">${dd(r.decision)}</span></b></div><div><small>STEPS</small><b>${esc(r.step_count??(r.steps||[]).length)}</b></div></div>`+(r.steps||[]).map((s,i)=>`<div class="rs"><b style="font:12px monospace;color:var(--cy)">${String(s.step??i+1).padStart(2,'0')}</b><div>${esc(s.action)}${Array.isArray(s.safer_alternatives)&&s.safer_alternatives.length?'<small>Safer: '+esc(s.safer_alternatives.join(' Â· '))+'</small>':''}</div><span style="font:12px monospace">${esc(s.risk_score??'â€”')}</span><span class="chip ${dd(s.decision)}">${dd(s.decision)}</span></div>`).join('')+(Array.isArray(r.recommendations)&&r.recommendations.length?'<div class="ev" style="margin-left:0"><b>Recommendations</b><ul>'+r.recommendations.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>':'');
+  }catch(e){$('simMsg').textContent='';$('simOut').innerHTML='<p style="color:#ff7a8c;font-size:13px">Simulation failed: '+esc(e.message)+'. Open this page from http://127.0.0.1:5173/dashboard.html with the backend running.</p>'}
+};
+if(location.hash&&TITLES[location.hash.slice(1)])show(location.hash.slice(1));
+
+/* ===== Electric background (all pages) ===== */
+(function(){const c=$('bg'),x=c.getContext('2d');let W,H,N=[],P=[];
+function rs(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);
+ const n=Math.round(W*H/15000);N=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.18,vy:(Math.random()-.5)*.18}));P=[]}
+addEventListener('resize',rs);rs();
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function link(){const L=[];for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){const dx=N[i].x-N[j].x,dy=N[i].y-N[j].y,d=Math.hypot(dx,dy);if(d<230)L.push([i,j,d])}return L}
+function tick(){x.clearRect(0,0,W,H);
+ N.forEach(n=>{if(!reduce){n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1}});
+ const L=link();
+ L.forEach(([i,j,d])=>{x.strokeStyle=`rgba(60,160,255,${(1-d/230)*.5})`;x.lineWidth=1.1;x.beginPath();x.moveTo(N[i].x,N[i].y);x.lineTo(N[j].x,N[j].y);x.stroke()});
+ N.forEach(n=>{x.fillStyle='rgba(140,230,255,.85)';x.fillRect(n.x-1.2,n.y-1.2,2.6,2.6)});
+ if(!reduce&&L.length&&Math.random()<.2&&P.length<22){const l=L[Math.floor(Math.random()*L.length)];P.push({a:l[0],b:l[1],t:0})}
+ P=P.filter(p=>p.t<1);P.forEach(p=>{p.t+=.014;const A=N[p.a],B=N[p.b],px=A.x+(B.x-A.x)*p.t,py=A.y+(B.y-A.y)*p.t;
+  const g=x.createRadialGradient(px,py,0,px,py,14);g.addColorStop(0,'rgba(120,240,255,.95)');g.addColorStop(1,'rgba(53,224,255,0)');x.fillStyle=g;x.fillRect(px-14,py-14,28,28);
+  x.strokeStyle='rgba(120,240,255,.55)';x.lineWidth=1.6;x.beginPath();x.moveTo(A.x+(B.x-A.x)*Math.max(0,p.t-.18),A.y+(B.y-A.y)*Math.max(0,p.t-.18));x.lineTo(px,py);x.stroke()});
+ requestAnimationFrame(tick)}
+tick()})();
+
+/* ===== Evaluate, history, CSV, security status ===== */
+$('eEv').oninput=e=>$('eEvV').textContent=e.target.value;
+$('runEval').onclick=async()=>{
+  const a=$('eAct').value.trim();if(!a){$('evMsg').textContent='Enter an action.';return}
+  $('evMsg').textContent='Evaluatingâ€¦';
+  try{const r=await post('/evaluate',{action:a,evidence_score:Number($('eEv').value),policy_violation:$('ePol').checked,contradiction_detected:$('eCon').checked});
+    $('evMsg').textContent='Done Â· recorded in the audit chain';const dd=String(r.decision).toUpperCase();const rs=reasons(r.reasons);
+    $('evOut').innerHTML=`<div class="vsum" style="margin-bottom:4px"><div><small>DECISION</small><b><span class="chip ${dd}">${dd}</span></b></div><div><small>RISK</small><b>${esc(r.risk_score??'â€”')}</b></div></div>`+(rs.length?'<div class="ev" style="margin-left:0"><ul>'+rs.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>':'');
+    load();loadHist()}
+  catch(e){$('evMsg').textContent='';$('evOut').innerHTML='<p style="color:#ff7a8c;font-size:13px">Evaluation failed: '+esc(e.message)+'</p>'}};
+async function loadHist(){
+  try{const d=await get('/simulation-history?limit=20');const r=Array.isArray(d.records)?d.records:[];$('shCnt').textContent=r.length+' recent';
+    $('shList').innerHTML=r.map(x=>{const dd=String(x.decision).toUpperCase(),acts=Array.isArray(x.actions)?x.actions:[];return `<div class="hr"><div><b>${esc(acts[0]||'Plan')}${acts.length>1?' +'+(acts.length-1)+' more':''}</b><small>${fmt(x.created_at)}</small></div><span style="font:12px monospace">${esc(x.overall_risk_score??'â€”')}</span><span class="chip ${dd}">${dd}</span></div>`}).join('')||'<p style="color:var(--mu);font-size:12px;margin-top:10px">No simulations saved yet.</p>'}
+  catch(e){$('shList').innerHTML='<p style="color:var(--mu);font-size:12px;margin-top:10px">History unavailable (backend not reached).</p>'}}
+loadHist();
+$('runSim').addEventListener('click',()=>setTimeout(loadHist,1500));
+$('aCsv').onclick=()=>{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const rows=[['id','created_at','action','decision','risk_score','evidence_score','policy_violation','contradiction_detected','reasons']].concat(ST.rec.map(r=>[r.id,r.created_at,r.action,r.decision,r.risk_score,r.evidence_score,r.policy_violation,r.contradiction_detected,reasons(r.reasons).join(' | ')]));
+  const u=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}));const a=document.createElement('a');a.href=u;a.download='aegis-x-audit.csv';a.click();URL.revokeObjectURL(u)};
+async function loadSecStatus(){let ss=null;try{ss=await get('/security/status')}catch(e){}
+  const el=$('secList'),old=el.querySelector('.sr-auth');if(old)old.remove();
+  const row=ss?`<div class="sr sr-auth"><span class="d ALLOW"></span><div><b>Authentication &amp; role-based access</b><small>${ss.auth_required_for_core_api?'Required for core API':'Not required for core API'} Â· ${esc(ss.user_count)} user(s)${ss.roles&&ss.roles.length?' Â· roles: '+esc(ss.roles.join(', ')):''}</small></div><span class="st ok">CHECKED</span></div>`
+   :`<div class="sr sr-auth"><span class="d"></span><div><b>Authentication &amp; role-based access</b><small>The /security/status endpoint is not available on this backend.</small></div><span class="st na">NOT AVAILABLE</span></div>`;
+  const na=[...el.querySelectorAll('.sr')].find(r=>r.textContent.includes('Not checked from this page')||r.classList.contains('sr-auth'));if(na)na.outerHTML=row;else el.insertAdjacentHTML('beforeend',row)}
+const _rs=renderSec;renderSec=function(){_rs();loadSecStatus()};
+
+/* ===== AEGIS-X session authentication ===== */
+function updateAccount(user){
+  const username=user?.username||sessionStorage.getItem('aegis_username')||'Authenticated';
+  const role=user?.role||sessionStorage.getItem('aegis_role')||'';
+  sessionStorage.setItem('aegis_username',username);
+  if(role)sessionStorage.setItem('aegis_role',role);
+  $('accountName').textContent=role?username+' · '+role:username;
+  $('accountAvatar').textContent=username.split(/[\s._-]+/).filter(Boolean).map(x=>x[0]).join('').slice(0,2).toUpperCase()||'AX';
+  $('authOpen').hidden=true;
+  $('authLogout').hidden=false;
+}
+
+function clearAccount(){
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem('aegis_username');
+  sessionStorage.removeItem('aegis_role');
+  $('accountName').textContent='Not signed in';
+  $('accountAvatar').textContent='AX';
+  $('authOpen').hidden=false;
+  $('authLogout').hidden=true;
+}
+
+if(getToken()){
+  updateAccount(null);
+}
+
+$('authOpen').onclick=()=>{
+  $('authError').textContent='';
+  $('authModal').hidden=false;
+  $('authUsername').focus();
+};
+
+$('authClose').onclick=()=>{
+  $('authModal').hidden=true;
+};
+
+$('authForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const username=$('authUsername').value.trim();
+  const password=$('authPassword').value;
+  const submit=$('authForm').querySelector('button[type="submit"]');
+  submit.disabled=true;
+  submit.textContent='Authenticating...';
+  $('authError').textContent='';
+
+  try{
+    let result=null,lastError=null;
+    for(const base of API){
+      try{
+        const response=await fetch(base+'/security/login',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({username,password}),
+          signal:AbortSignal.timeout(15000)
+        });
+        let data={};
+        try{data=await response.json()}catch(_){}
+        if(!response.ok){
+          throw new Error(data.detail||'Sign-in failed (HTTP '+response.status+')');
+        }
+        result=data;
+        break;
+      }catch(err){
+        if(err.message.includes('HTTP')||err.message!=='Failed to fetch'&&err.name!=='TypeError'&&err.name!=='TimeoutError'){
+          throw err;
+        }
+        lastError=err;
+      }
+    }
+    if(!result)throw lastError||new Error('Backend not reachable.');
+    if(!result.access_token)throw new Error('The backend did not return an access token.');
+
+    sessionStorage.setItem(TOKEN_KEY,result.access_token);
+    updateAccount(result.user||{username});
+    $('authPassword').value='';
+    $('authModal').hidden=true;
+    $('authError').textContent='';
+    await load();
+    await loadHist();
+  }catch(err){
+    $('authError').textContent=err.message||'Sign-in failed. Please try again.';
+  }finally{
+    submit.disabled=false;
+    submit.textContent='Sign in securely';
+  }
+});
+
+$('authLogout').onclick=async()=>{
+  const token=getToken();
+  if(token){
+    for(const base of API){
+      try{
+        await fetch(base+'/security/logout',{
+          method:'POST',
+          headers:{Authorization:'Bearer '+token},
+          signal:AbortSignal.timeout(8000)
+        });
+        break;
+      }catch(_){}
+    }
+  }
+  clearAccount();
+  $('authModal').hidden=false;
+  $('authError').textContent='You have signed out. Sign in to access protected data.';
+  await load();
+  $('shCnt').textContent='Sign in required';
+  $('shList').innerHTML='<p style="color:var(--mu);font-size:12px">Sign in to view simulation history.</p>';
+};
+/* ===== End AEGIS-X session authentication ===== */
+/* ===== Sidebar vision: neon city skyline with data pulses ===== */
+(function(){const c=$('sk'),x=c.getContext('2d');let W,H,B=[],tt=0;
+function rs(){const r=c.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);
+ B=[];let px=4;let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+ while(px<W-4){const w=9+rnd()*16,h=18+rnd()*62;B.push({x:px,w,h,win:Math.floor(h/8)});px+=w+2.5}}
+addEventListener('resize',rs);rs();
+function f(){tt+=.016;x.clearRect(0,0,W,H);
+ const g=x.createRadialGradient(W/2,H,5,W/2,H,W*.7);g.addColorStop(0,'rgba(40,140,255,.35)');g.addColorStop(1,'rgba(40,140,255,0)');x.fillStyle=g;x.fillRect(0,0,W,H);
+ B.forEach((b,i)=>{const y=H-b.h-6;x.fillStyle='rgba(8,32,70,.95)';x.fillRect(b.x,y,b.w,b.h);x.strokeStyle='rgba(80,190,255,.65)';x.lineWidth=1;x.strokeRect(b.x+.5,y+.5,b.w-1,b.h-1);
+  for(let k=0;k<b.win;k++){const on=Math.sin(tt*1.3+i*3.1+k*1.7)>.1;x.fillStyle=on?'rgba(130,235,255,.85)':'rgba(40,110,190,.35)';x.fillRect(b.x+3+(k%2)*(b.w/2-1),y+4+Math.floor(k/1)*7%b.h,2,2)}});
+ x.strokeStyle='rgba(90,200,255,.7)';x.beginPath();x.moveTo(0,H-6);x.lineTo(W,H-6);x.stroke();
+ for(let i=0;i<3;i++){const p=(tt*.22+i/3)%1,px=p*W,top=B.reduce((m,b)=>px>=b.x&&px<=b.x+b.w?Math.max(m,b.h):m,0);const py=H-6-top-6-Math.sin(p*Math.PI)*12;const gg=x.createRadialGradient(px,py,0,px,py,9);gg.addColorStop(0,'rgba(170,245,255,.95)');gg.addColorStop(1,'rgba(53,224,255,0)');x.fillStyle=gg;x.fillRect(px-9,py-9,18,18)}
+ requestAnimationFrame(f)}f()})();
+</script>
+</body>
+</html>
+
+
+
+
+
