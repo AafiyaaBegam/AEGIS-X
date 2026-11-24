@@ -1,4 +1,4 @@
-﻿
+
 """AEGIS-X Stage 6 security foundation.
 
 Uses only Python's standard library for password hashing, signed bearer tokens,
@@ -472,6 +472,42 @@ def bootstrap_admin(
             "username": username.strip(),
             "role": "admin",
         }
+
+
+def recover_admin(
+    recovery_token: str,
+    username: str,
+    password: str,
+) -> dict[str, Any]:
+    """Create an additional administrator using a separately configured recovery secret.
+
+    This operation never deletes, disables, or changes existing accounts or audit data.
+    """
+    initialize()
+
+    expected = os.getenv("AEGIS_RECOVERY_TOKEN", "")
+    if not expected or not hmac.compare_digest(recovery_token, expected):
+        raise SecurityError("Recovery is not configured or the recovery token is invalid.")
+
+    if not (3 <= len(username) <= 80) or not username.strip():
+        raise SecurityError("Username must contain 3-80 characters.")
+    if len(password) < 12 or len(password) > 128:
+        raise SecurityError("Password must contain 12-128 characters.")
+
+    try:
+        with _managed_connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            cursor = conn.execute(
+                """
+                INSERT INTO users(username,password_hash,role,created_at)
+                VALUES(?,?,?,?)
+                """,
+                (username.strip(), _password_hash(password), "admin",
+                 datetime.now(timezone.utc).isoformat()),
+            )
+            return {"id": cursor.lastrowid, "username": username.strip(), "role": "admin"}
+    except sqlite3.IntegrityError as exc:
+        raise SecurityError("Username already exists.") from exc
 
 
 def create_user(
