@@ -4,6 +4,12 @@
 
 **Evaluate. Govern. Verify.**
 
+[![AEGIS-X CI](https://github.com/AafiyaaBegam/AEGIS-X/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AafiyaaBegam/AEGIS-X/actions/workflows/ci.yml) [![Backend](https://img.shields.io/badge/backend-FastAPI-009688)](https://fastapi.tiangolo.com/) [![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-646CFF)](https://vite.dev/)
+
+**Live demo:** [Open AEGIS-X](https://aegis-x-frontend.onrender.com/dashboard.html) · [Backend API](https://aegis-x-p9ao.onrender.com) · [API docs](https://aegis-x-p9ao.onrender.com/docs) · [Health check](https://aegis-x-p9ao.onrender.com/health)
+
+**Repository:** [Source code](https://github.com/AafiyaaBegam/AEGIS-X) · [Demo walkthrough](docs/DEMO_WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [External-agent integration](docs/EXTERNAL_AGENT_INTEGRATION.md)
+
 
 
 AEGIS-X is a prototype governance and control plane designed to evaluate proposed AI-agent actions, apply explainable policy decisions, control execution of approved demo tools, and preserve an auditable record of decisions.
@@ -550,7 +556,7 @@ AEGIS-X is a development and portfolio prototype, not a production-certified sec
 
 
 
-**Hosted portfolio prototype — verified November 24, 2026.** The Render backend and frontend are deployed and live. The authenticated dashboard is displaying live health, audit, and security data; production request logs confirm successful responses for `/health`, `/audit`, `/audit/verify`, and `/security/status`. The backend health response reports its database checks and audit-chain checks as healthy/valid. The deployment is a demonstrator, not a production-certified security product; see the limitations above.
+**Hosted portfolio prototype — checked November 24, 2026.** The latest Render deployments for the backend and frontend are live. Render request logs show successful `200` responses for `/health`, `/audit`, `/audit/verify`, and `/security/status` during authenticated dashboard traffic. The dashboard requires sign-in; use your own authorized demo account. This is a demonstrator, not a production-certified security product; see the limitations above.
 
 
 
