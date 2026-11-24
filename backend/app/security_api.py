@@ -16,6 +16,7 @@ from backend.app.security_store import (
     add_security_event,
     authenticate,
     bootstrap_admin,
+    recover_admin,
     create_user,
     list_security_events,
     list_users,
@@ -33,6 +34,12 @@ router = APIRouter(prefix="/security", tags=["Security & access"])
 
 class BootstrapRequest(BaseModel):
     bootstrap_token: str = Field(min_length=1, max_length=256)
+    username: str = Field(min_length=3, max_length=80)
+    password: str = Field(min_length=12, max_length=128)
+
+
+class AdminRecoveryRequest(BaseModel):
+    recovery_token: str = Field(min_length=1, max_length=256)
     username: str = Field(min_length=3, max_length=80)
     password: str = Field(min_length=12, max_length=128)
 
@@ -118,6 +125,18 @@ def bootstrap(request: BootstrapRequest):
         return {"created": True, "user": user}
     except SecurityError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/recover-admin", status_code=201)
+def recover_administrator(payload: AdminRecoveryRequest):
+    """Create an additional admin after proving possession of the recovery secret."""
+    try:
+        user = recover_admin(payload.recovery_token, payload.username, payload.password)
+        return {"created": True, "user": user}
+    except SecurityError as exc:
+        message = str(exc)
+        status = 401 if "recovery" in message.lower() else 409
+        raise HTTPException(status_code=status, detail=message) from exc
 
 
 @router.post("/login")
