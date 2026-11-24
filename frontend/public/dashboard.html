@@ -713,6 +713,82 @@ function f(){tt+=.016;x.clearRect(0,0,W,H);
  for(let i=0;i<3;i++){const p=(tt*.22+i/3)%1,px=p*W,top=B.reduce((m,b)=>px>=b.x&&px<=b.x+b.w?Math.max(m,b.h):m,0);const py=H-6-top-6-Math.sin(p*Math.PI)*12;const gg=x.createRadialGradient(px,py,0,px,py,9);gg.addColorStop(0,'rgba(170,245,255,.95)');gg.addColorStop(1,'rgba(53,224,255,0)');x.fillStyle=gg;x.fillRect(px-9,py-9,18,18)}
  requestAnimationFrame(f)}f()})();
 </script>
+
+<script>
+/* AEGIS_X_LIVE_DATA_RECOVERY: independent live-data renderer */
+(function(){
+  const $=id=>document.getElementById(id);
+  const put=(id,value)=>{const el=$(id);if(el)el.textContent=String(value)};
+  const token=()=>{try{return sessionStorage.getItem('aegis_access_token')||''}catch(_){return ''}};
+  async function read(path){
+    const headers={},t=token();if(t)headers.Authorization='Bearer '+t;
+    const response=await fetch('/api'+path,{headers,cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(response.status===401)throw new Error('AUTH_REQUIRED');
+    if(response.status===403)throw new Error('FORBIDDEN');
+    if(!response.ok)throw new Error('HTTP '+response.status+' '+path);
+    return response.json();
+  }
+  function setSystem(online,label){
+    const dot=$('sdot'),pill=$('sys');
+    if(dot)dot.className='dot'+(online?'':' off');
+    if(pill){pill.className='pill'+(online?'':' off');if(pill.lastChild)pill.lastChild.textContent=label;}
+  }
+  function renderActivity(records){
+    const host=$('act');if(!host)return;
+    host.replaceChildren();
+    if(!records.length){const p=document.createElement('p');p.textContent='No audit records yet.';host.appendChild(p);return;}
+    records.slice(0,5).forEach(record=>{
+      const row=document.createElement('div');row.className='row';
+      const decision=String(record.decision||'').toUpperCase();
+      const dot=document.createElement('span');dot.className='d '+decision;
+      const details=document.createElement('div');
+      const action=document.createElement('b');action.textContent=record.action||'—';
+      const time=document.createElement('small');time.textContent=record.created_at?new Date(record.created_at).toLocaleString():'';
+      details.append(action,time);
+      const chip=document.createElement('span');chip.className='chip '+decision;chip.textContent=decision||'UNKNOWN';
+      row.append(dot,details,chip);host.appendChild(row);
+    });
+  }
+  async function refresh(){
+    try{
+      const health=await read('/health');
+      const [verify,audit]=await Promise.all([read('/audit/verify'),read('/audit?limit=50')]);
+      const records=Array.isArray(audit)?audit:(audit.records||audit.items||[]);
+      const valid=verify.valid===true,checked=Number(verify.checked_records||0);
+      put('sapi','API connected');put('sver','Backend v'+(health.version||'?'));
+      put('kHealth',health.status==='healthy'?'Healthy':'Degraded');
+      put('kVer','VERSION '+(health.version||'?'));
+      put('kRec',checked);put('kInt',valid?'Verified':'Failed');
+      put('kErr',valid?'NO CHAIN ERRORS REPORTED':'CHAIN ERRORS FOUND');
+      put('kDec',records[0]?String(records[0].decision||'—').toUpperCase():'—');
+      put('navCount',checked);put('aCount',checked);put('hRec',checked);put('hInt',valid?'Verified':'Failed');
+      put('secTag',health.status==='healthy'&&valid?'All systems secure':'Attention needed');
+      put('hStat',health.status==='healthy'?'Operational':'Unavailable');
+      const checks=[health.status==='healthy',valid],pct=Math.round(checks.filter(Boolean).length/2*100);
+      put('gPct',pct+'%');
+      const count=records.length,risks=records.map(r=>Number(r.risk_score)).filter(Number.isFinite);
+      put('tN',risks.length);put('tL',risks.length?risks[risks.length-1]:'—');
+      put('tA',risks.length?(risks.reduce((a,b)=>a+b,0)/risks.length).toFixed(1):'—');
+      put('tP',risks.length?Math.max(...risks):'—');
+      put('aCount',checked);renderActivity(records);setSystem(health.status==='healthy','SYSTEM ONLINE');
+      const foot=$('foot');if(foot)foot.textContent='Live data verified from the AEGIS-X backend.';
+    }catch(error){
+      console.error('AEGIS-X independent data refresh:',error);
+      if(error.message==='AUTH_REQUIRED'||error.message==='FORBIDDEN'){
+        put('sapi',error.message==='AUTH_REQUIRED'?'Sign in required':'Access restricted');
+        put('sver','Backend reachable · audit access protected');
+        put('kHealth','Healthy');put('kVer','AUDIT ACCESS PROTECTED');
+        setSystem(true,'API ONLINE · AUTH REQUIRED');
+      }else{
+        put('sapi','Dashboard data unavailable');put('sver',error.message);
+        const foot=$('foot');if(foot)foot.textContent='Live dashboard refresh failed: '+error.message;
+      }
+    }
+  }
+  refresh();setInterval(refresh,15000);
+})();
+</script>
+
 </body>
 </html>
 
