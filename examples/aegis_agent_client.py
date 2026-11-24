@@ -92,4 +92,28 @@ class AegisGatewayClient:
                 "AEGIS-X returned an invalid governance response; "
                 "proposal must remain unexecuted."
             )
+
+        decision = result["decision"]
+        executed = result.get("execution_performed")
+        if not isinstance(executed, bool):
+            raise AegisGatewayError(
+                "AEGIS-X response is missing a valid execution status; "
+                "do not run the proposed tool."
+            )
+        if decision == "ALLOW" and executed is not True:
+            raise AegisGatewayError(
+                "AEGIS-X returned ALLOW without confirming execution; "
+                "do not run the proposed tool or retry automatically."
+            )
+        if decision in {"REVIEW", "BLOCK"} and executed is not False:
+            raise AegisGatewayError(
+                "AEGIS-X returned a non-ALLOW decision with an execution "
+                "status that is not safely false."
+            )
+        if decision == "REVIEW" and not isinstance(
+            result.get("approval_request"), dict
+        ):
+            raise AegisGatewayError(
+                "AEGIS-X REVIEW response is missing its approval request."
+            )
         return result
