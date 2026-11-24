@@ -512,6 +512,8 @@ GitHub Actions is configured to run backend tests, the policy benchmark, and the
 
 | `docs/PRODUCTION_DEPLOYMENT.md` | Hosted deployment configuration and acceptance runbook |
 
+| `docs/DEMO_WALKTHROUGH.md` | Judge/interview demonstration sequence and accurate claim boundaries |
+
 | `examples/aegis_agent_client.py` | Standard-library Python client for governed agent proposals |
 
 
