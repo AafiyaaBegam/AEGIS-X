@@ -542,7 +542,7 @@ AEGIS-X is a development and portfolio prototype, not a production-certified sec
 
 
 
-**Development prototype — automated backend tests and frontend production build pass in CI. Hosted deployment is not considered complete until the Render backend, Turso connection, first-admin bootstrap, authenticated dashboard, and live evidence checks are verified.**
+**Hosted portfolio prototype — verified November 24, 2026.** The Render backend and frontend are deployed and live. The authenticated dashboard is displaying live health, audit, and security data; production request logs confirm successful responses for `/health`, `/audit`, `/audit/verify`, and `/security/status`. The backend health response reports its database checks and audit-chain checks as healthy/valid. The deployment is a demonstrator, not a production-certified security product; see the limitations above.
 
 
 
