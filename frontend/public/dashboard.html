@@ -763,6 +763,26 @@ function f(){tt+=.016;x.clearRect(0,0,W,H);
       put('kDec',records[0]?String(records[0].decision||'—').toUpperCase():'—');
       put('navCount',checked);put('aCount',checked);put('hRec',checked);put('hInt',valid?'Verified':'Failed');
       put('secTag',health.status==='healthy'&&valid?'All systems secure':'Attention needed');
+      // Keep the security-posture checklist synchronized with the same live response as the KPI cards.
+      const blocked=records.filter(r=>String(r.decision||'').toUpperCase()==='BLOCK').length;
+      const violations=records.filter(r=>r.policy_violation===true).length;
+      const checklist=$('chk');
+      if(checklist){
+        checklist.replaceChildren();
+        [
+          ['Backend service',health.status==='healthy'?'Healthy':'Offline',health.status==='healthy'],
+          ['Audit chain',valid?'Verified':'Failed',valid],
+          ['Blocked in recent records',blocked+' of '+records.length,true],
+          ['Policy violations flagged',violations,violations===0]
+        ].forEach(([label,value,passed])=>{
+          const row=document.createElement('div');
+          const name=document.createElement('span');name.textContent=label;
+          const result=document.createElement('b');result.textContent=String(value);
+          result.className=passed?'ok':'';
+          if(!passed)result.style.color='#ff7a8c';
+          row.append(name,result);checklist.appendChild(row);
+        });
+      }
       put('hStat',health.status==='healthy'?'Operational':'Unavailable');
       const checks=[health.status==='healthy',valid],pct=Math.round(checks.filter(Boolean).length/2*100);
       put('gPct',pct+'%');
