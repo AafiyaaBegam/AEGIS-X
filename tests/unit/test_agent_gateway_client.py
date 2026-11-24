@@ -90,3 +90,70 @@ def test_client_rejects_out_of_range_evidence_score():
         client.submit(
             AgentProposal("read_service_status", "read service status", 101)
         )
+
+
+def test_client_accepts_review_only_with_pending_approval(monkeypatch):
+    monkeypatch.setattr(
+        "examples.aegis_agent_client.urlopen",
+        lambda *args, **kwargs: FakeResponse({
+            "decision": "REVIEW",
+            "execution_performed": False,
+            "approval_request": {"id": 17, "status": "PENDING"},
+        }),
+    )
+    client = AegisGatewayClient("http://localhost:8000", "secret")
+    result = client.submit(
+        AgentProposal("read_service_status", "review service status")
+    )
+
+    assert result["decision"] == "REVIEW"
+    assert result["execution_performed"] is False
+    assert result["approval_request"]["id"] == 17
+
+
+def test_client_rejects_allow_without_confirmed_execution(monkeypatch):
+    monkeypatch.setattr(
+        "examples.aegis_agent_client.urlopen",
+        lambda *args, **kwargs: FakeResponse({
+            "decision": "ALLOW",
+            "execution_performed": False,
+        }),
+    )
+    client = AegisGatewayClient("http://localhost:8000", "secret")
+
+    with pytest.raises(AegisGatewayError, match="ALLOW without confirming execution"):
+        client.submit(
+            AgentProposal("read_service_status", "read service status")
+        )
+
+
+def test_client_rejects_review_without_approval_record(monkeypatch):
+    monkeypatch.setattr(
+        "examples.aegis_agent_client.urlopen",
+        lambda *args, **kwargs: FakeResponse({
+            "decision": "REVIEW",
+            "execution_performed": False,
+        }),
+    )
+    client = AegisGatewayClient("http://localhost:8000", "secret")
+
+    with pytest.raises(AegisGatewayError, match="missing its approval request"):
+        client.submit(
+            AgentProposal("read_service_status", "review service status")
+        )
+
+
+def test_client_rejects_block_response_that_claims_execution(monkeypatch):
+    monkeypatch.setattr(
+        "examples.aegis_agent_client.urlopen",
+        lambda *args, **kwargs: FakeResponse({
+            "decision": "BLOCK",
+            "execution_performed": True,
+        }),
+    )
+    client = AegisGatewayClient("http://localhost:8000", "secret")
+
+    with pytest.raises(AegisGatewayError, match="not safely false"):
+        client.submit(
+            AgentProposal("unknown_tool", "perform a blocked action")
+        )
