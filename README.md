@@ -508,6 +508,12 @@ GitHub Actions is configured to run backend tests, the policy benchmark, and the
 
 | `docs/STAGE6\_SECURITY.md` | Authentication, roles, and security-event setup |
 
+| `docs/EXTERNAL_AGENT_INTEGRATION.md` | External-agent proposal contract, Python client, and fail-closed rules |
+
+| `docs/PRODUCTION_DEPLOYMENT.md` | Hosted deployment configuration and acceptance runbook |
+
+| `examples/aegis_agent_client.py` | Standard-library Python client for governed agent proposals |
+
 
 
 ## Important limitations
