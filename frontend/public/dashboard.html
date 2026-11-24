@@ -296,7 +296,7 @@ nav a[data-v]{cursor:pointer}
   </section>
 </div>
 <script>
-const API=location.protocol==='file:'?['http://127.0.0.1:8000']:['/api','http://127.0.0.1:8000'];
+const API=location.protocol==='file:'?['http://127.0.0.1:8000']:((location.hostname==='localhost'||location.hostname==='127.0.0.1')?['/api','http://127.0.0.1:8000']:['/api']);
 const SAMPLE={health:{status:'healthy',version:'0.2.0'},verify:{valid:true,checked_records:243,errors:[]},
  audit:[{action:'Deploy to production',decision:'ALLOW',risk_score:18,created_at:'2026-11-20T11:33:00'},{action:'Delete customer records',decision:'BLOCK',risk_score:92,created_at:'2026-11-20T11:20:00'},{action:'Send marketing email',decision:'REVIEW',risk_score:55,created_at:'2026-11-20T10:58:00'},{action:'Read analytics report',decision:'ALLOW',risk_score:8,created_at:'2026-11-20T10:40:00'},{action:'Update firewall rule',decision:'REVIEW',risk_score:61,created_at:'2026-11-20T10:12:00'},{action:'Export user list',decision:'BLOCK',risk_score:88,created_at:'2026-11-20T09:50:00'},{action:'Restart worker',decision:'ALLOW',risk_score:22,created_at:'2026-11-20T09:31:00'}]};
 const ST={rec:[],h:{},v:{},live:false,f:'ALL',q:''};
@@ -391,7 +391,8 @@ async function load(){
     $('tL').textContent=pts[pts.length-1];$('tA').textContent=(pts.reduce((s,x)=>s+x,0)/pts.length).toFixed(1);$('tP').textContent=Math.max(...pts);$('tN').textContent=pts.length}
   $('foot').textContent=live?'Live data from your AEGIS-X backend':'Backend not reachable. No sample records are being presented as live evidence.';
 }
-load();setInterval(load,15000);
+function showDashboardError(error){console.error('AEGIS-X dashboard refresh failed:',error);$('sapi').textContent='Dashboard error';$('sver').textContent='Refresh failed · see browser console';$('foot').textContent='Live dashboard data could not be rendered. Refresh the page; if this continues, share the console error (never share credentials).';}
+load().catch(showDashboardError);setInterval(()=>load().catch(showDashboardError),15000);
 (function(){const seen={};const orig=Object.getOwnPropertyDescriptor(Node.prototype,'textContent');
  ['kRec','aCount','hRec','navCount'].forEach(id=>{const el=$(id);new MutationObserver(()=>{if(el._a)return;const n=Number(el.textContent);if(!Number.isFinite(n)||seen[id]===n)return;seen[id]=n;el._a=1;let s=0;const st=performance.now();(function f(now){const k=Math.min(1,(now-st)/900);s=Math.round(n*(1-Math.pow(1-k,3)));el.textContent=s;if(k<1)requestAnimationFrame(f);else setTimeout(()=>{el._a=0},50)})(st)}).observe(el,{childList:true,characterData:true,subtree:true})})})();
 
